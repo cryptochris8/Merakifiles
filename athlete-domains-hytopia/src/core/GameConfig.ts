@@ -83,8 +83,8 @@ export const RANK_CONFIG: Record<Rank, { name: string; color: string; prefix: st
 // LOBBY CONFIG
 // ============================================
 export const LOBBY_CONFIG = {
-  /** Spawn position - jetski island city area for testing. */
-  spawnPosition: { x: 0.5, y: 20.0, z: -600.5 },
+  /** Spawn position on the lobby platform above the sumo arena. */
+  spawnPosition: { x: 0.5, y: 82.0, z: 0.5 },
   /** Y level of the lobby platform (built programmatically by MapLoader). */
   platformY: 80,
   /** Half-size of the lobby platform (full width = 2*size+1 = 21 blocks). */
