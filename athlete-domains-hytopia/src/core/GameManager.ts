@@ -59,22 +59,51 @@ const LOBBY_NPCS: LobbyNPC[] = [
     gameModeType: GameModeType.SUMO,
     name: 'Sumo NPC',
     modelUri: 'models/players/player.gltf',
-    position: { x: -3.5, y: 81.0, z: -2.5 },
+    position: { x: -6.5, y: 81.0, z: -2.5 },
     tag: 'npc_sumo',
   },
   {
     gameModeType: GameModeType.FOOTBALL,
     name: 'Football NPC',
     modelUri: 'models/players/player.gltf',
-    position: { x: 3.5, y: 81.0, z: -2.5 },
+    position: { x: -3.5, y: 81.0, z: -2.5 },
     tag: 'npc_football',
   },
-  // Disabled game modes - uncomment when arenas are available:
-  // { gameModeType: GameModeType.TOWER_DUEL, ... },
-  // { gameModeType: GameModeType.TREASURE_GUARD, ... },
-  // { gameModeType: GameModeType.PARKOUR_RACE, ... },
-  // { gameModeType: GameModeType.JETSKI_RACE, ... },
-  // { gameModeType: GameModeType.ARCHERY, ... },
+  {
+    gameModeType: GameModeType.TOWER_DUEL,
+    name: 'Tower Duel NPC',
+    modelUri: 'models/players/player.gltf',
+    position: { x: -0.5, y: 81.0, z: -2.5 },
+    tag: 'npc_tower_duel',
+  },
+  {
+    gameModeType: GameModeType.TREASURE_GUARD,
+    name: 'Treasure Guard NPC',
+    modelUri: 'models/players/player.gltf',
+    position: { x: 2.5, y: 81.0, z: -2.5 },
+    tag: 'npc_treasure_guard',
+  },
+  {
+    gameModeType: GameModeType.PARKOUR_RACE,
+    name: 'Parkour NPC',
+    modelUri: 'models/players/player.gltf',
+    position: { x: 5.5, y: 81.0, z: -2.5 },
+    tag: 'npc_parkour',
+  },
+  {
+    gameModeType: GameModeType.JETSKI_RACE,
+    name: 'Jetski NPC',
+    modelUri: 'models/players/player.gltf',
+    position: { x: -4.5, y: 81.0, z: 2.5 },
+    tag: 'npc_jetski',
+  },
+  {
+    gameModeType: GameModeType.ARCHERY,
+    name: 'Archery NPC',
+    modelUri: 'models/players/player.gltf',
+    position: { x: 4.5, y: 81.0, z: 2.5 },
+    tag: 'npc_archery',
+  },
 ];
 
 // ============================================
@@ -180,10 +209,22 @@ export class GameManager {
    */
   private async preloadGameModes(): Promise<void> {
     try {
-      // Only load modules for enabled game modes.
-      const [footballMod, sumoMod] = await Promise.all([
+      const [
+        footballMod,
+        sumoMod,
+        towerDuelMod,
+        treasureGuardMod,
+        parkourRaceMod,
+        jetskiRaceMod,
+        archeryMod,
+      ] = await Promise.all([
         import('../gamemodes/FootballGame'),
         import('../gamemodes/SumoGame'),
+        import('../gamemodes/TowerDuelGame'),
+        import('../gamemodes/TreasureGuardGame'),
+        import('../gamemodes/ParkourRaceGame'),
+        import('../gamemodes/JetskiRaceGame'),
+        import('../gamemodes/ArcheryGame'),
       ]);
 
       // Sumo (default export)
@@ -202,12 +243,32 @@ export class GameManager {
         new footballMod.FootballGame('3v3'),
       );
 
-      // Disabled game modes (no standalone arena maps available):
-      // Tower Duel, Treasure Guard, Parkour Race, Jetski Race, Archery
-      // These will be re-enabled when their arena data is extracted from road.json.
+      // Tower Duel (named export, not default)
+      this.matchManager.registerGameMode(GameModeType.TOWER_DUEL, () =>
+        new towerDuelMod.TowerDuelGame(),
+      );
 
-      console.info('[GameManager] Registered 4 game modes (Sumo, Football 1v1/2v2/3v3).');
-      console.info('[GameManager] 5 game modes disabled (no standalone arena maps).');
+      // Treasure Guard
+      this.matchManager.registerGameMode(GameModeType.TREASURE_GUARD, () =>
+        new treasureGuardMod.default(),
+      );
+
+      // Parkour Race
+      this.matchManager.registerGameMode(GameModeType.PARKOUR_RACE, () =>
+        new parkourRaceMod.default(),
+      );
+
+      // Jetski Race
+      this.matchManager.registerGameMode(GameModeType.JETSKI_RACE, () =>
+        new jetskiRaceMod.default(),
+      );
+
+      // Archery
+      this.matchManager.registerGameMode(GameModeType.ARCHERY, () =>
+        new archeryMod.default(),
+      );
+
+      console.info('[GameManager] Registered 9 game modes (all enabled).');
     } catch (err) {
       console.error('[GameManager] Error preloading game modes:', err);
     }
@@ -249,8 +310,45 @@ export class GameManager {
       maxPlayers: 6,
     });
 
-    // Disabled: Tower Duel, Treasure Guard, Parkour Race, Jetski Race, Archery
-    // (no standalone arena maps available)
+    this.uiManager.registerGameMode({
+      type: GameModeType.TOWER_DUEL,
+      name: TOWER_DUEL_CONFIG.name,
+      description: 'Knight vs Tower - destroy the other team!',
+      minPlayers: 2,
+      maxPlayers: 4,
+    });
+
+    this.uiManager.registerGameMode({
+      type: GameModeType.TREASURE_GUARD,
+      name: TREASURE_GUARD_CONFIG.name,
+      description: 'Defend your treasure from waves of monsters!',
+      minPlayers: TREASURE_GUARD_CONFIG.minPlayers,
+      maxPlayers: 4,
+    });
+
+    this.uiManager.registerGameMode({
+      type: GameModeType.PARKOUR_RACE,
+      name: PARKOUR_RACE_CONFIG.name,
+      description: 'Race through the parkour course!',
+      minPlayers: PARKOUR_RACE_CONFIG.minPlayers,
+      maxPlayers: PARKOUR_RACE_CONFIG.maxPlayers,
+    });
+
+    this.uiManager.registerGameMode({
+      type: GameModeType.JETSKI_RACE,
+      name: JETSKI_RACE_CONFIG.name,
+      description: 'Race jetskis around the island!',
+      minPlayers: JETSKI_RACE_CONFIG.minPlayers,
+      maxPlayers: JETSKI_RACE_CONFIG.maxPlayers,
+    });
+
+    this.uiManager.registerGameMode({
+      type: GameModeType.ARCHERY,
+      name: ARCHERY_CONFIG.name,
+      description: 'Practice your archery skills!',
+      minPlayers: ARCHERY_CONFIG.minPlayers,
+      maxPlayers: ARCHERY_CONFIG.maxPlayers,
+    });
   }
 
   // ============================================

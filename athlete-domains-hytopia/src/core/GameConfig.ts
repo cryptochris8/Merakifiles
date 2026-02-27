@@ -30,27 +30,34 @@ export enum GameModeType {
 
 /** Coordinate offsets applied when merging arena maps. */
 export const FOOTBALL_OFFSET = { x: 300, y: 0, z: 0 };
+export const TREASURE_GUARD_OFFSET = { x: 600, y: 0, z: 0 };
+export const ARCHERY_OFFSET = { x: 900, y: 0, z: 0 };
+export const PARKOUR_OFFSET = { x: 0, y: 0, z: 600 };
+export const TOWER_DUEL_OFFSET = { x: 600, y: 0, z: 600 };
+export const JETSKI_OFFSET = { x: 0, y: 0, z: -600 };
 
 /**
  * Arena maps to load and merge at startup.
  * Sumo arena doubles as the lobby area (no offset).
- * Football field is placed 300 blocks east.
+ * Each arena is placed at a unique offset to avoid overlapping.
  */
 export const ARENA_MAPS: ArenaMapEntry[] = [
   { file: 'sumo-arena.json', offset: { x: 0, y: 0, z: 0 } },
   { file: 'football-field.json', offset: FOOTBALL_OFFSET },
+  { file: 'treasure-guard.json', offset: TREASURE_GUARD_OFFSET },
+  { file: 'archery.json', offset: ARCHERY_OFFSET },
+  { file: 'parkour-course-extracted.json', offset: PARKOUR_OFFSET },
+  { file: 'tower-duel-arena.json', offset: TOWER_DUEL_OFFSET },
+  { file: 'jetski-track.json', offset: JETSKI_OFFSET },
 ];
 
 /**
- * Game modes that are currently disabled because their arenas are only
- * available in road.json (too large to load) or have no unique schematic.
+ * Game modes that are currently disabled. Empty = all enabled.
+ * Previously disabled modes now have standalone arena maps extracted
+ * from road.json and MCA sources.
  */
 export const DISABLED_GAME_MODES: Set<GameModeType> = new Set([
-  GameModeType.TOWER_DUEL,       // schematic is duplicate of football
-  GameModeType.TREASURE_GUARD,   // only in road.json
-  GameModeType.PARKOUR_RACE,     // only in road.json
-  GameModeType.JETSKI_RACE,      // only in road.json
-  GameModeType.ARCHERY,          // only in road.json
+  // All game modes are now enabled!
 ]);
 
 // ============================================
@@ -76,8 +83,8 @@ export const RANK_CONFIG: Record<Rank, { name: string; color: string; prefix: st
 // LOBBY CONFIG
 // ============================================
 export const LOBBY_CONFIG = {
-  /** Spawn position on the lobby platform above the sumo arena. */
-  spawnPosition: { x: 0.5, y: 82.0, z: 0.5 },
+  /** Spawn position - jetski island city area for testing. */
+  spawnPosition: { x: 0.5, y: 20.0, z: -600.5 },
   /** Y level of the lobby platform (built programmatically by MapLoader). */
   platformY: 80,
   /** Half-size of the lobby platform (full width = 2*size+1 = 21 blocks). */
@@ -109,28 +116,35 @@ export const SUMO_CONFIG = {
 // ============================================
 // TOWER DUEL CONFIG
 // ============================================
+/**
+ * Tower Duel coordinates recalculated for standalone tower-duel-arena.json
+ * placed at TOWER_DUEL_OFFSET (600, 0, 600).
+ *
+ * Extraction center: (-40, 55, 0) -> (0, 0, 0) in extracted map.
+ * Final coords = extracted + offset.
+ */
 export const TOWER_DUEL_CONFIG = {
   name: 'Tower Duel',
   startCountdown: 15,
   mapCountdown: 10,
   bestOf: 3,
   matchDuration: 300, // seconds
-  mapMiddle: { x: -40.5, y: 73.5, z: 0.5 },
+  mapMiddle: { x: 599.5, y: 18.5, z: 600.5 },
   teams: {
     blue: {
       color: '#5555FF',
       name: 'Blue',
       spawnPoints: [
-        { x: -78.5, y: 91.0, z: 0.5, yaw: -90.0 }, // knight
-        { x: -78.5, y: 91.0, z: 0.5, yaw: -90.0 }, // tower
+        { x: 561.5, y: 36.0, z: 600.5, yaw: -90.0 }, // knight
+        { x: 561.5, y: 36.0, z: 600.5, yaw: -90.0 }, // tower
       ],
     },
     red: {
       color: '#FF5555',
       name: 'Red',
       spawnPoints: [
-        { x: -1.5, y: 91.0, z: 0.5, yaw: 90.0 }, // knight
-        { x: -1.5, y: 91.0, z: 0.5, yaw: 90.0 }, // tower
+        { x: 638.5, y: 36.0, z: 600.5, yaw: 90.0 }, // knight
+        { x: 638.5, y: 36.0, z: 600.5, yaw: 90.0 }, // tower
       ],
     },
   },
@@ -143,25 +157,32 @@ export const TOWER_DUEL_CONFIG = {
 // ============================================
 // TREASURE GUARD CONFIG
 // ============================================
+/**
+ * Treasure Guard coordinates recalculated for standalone treasure-guard.json
+ * placed at TREASURE_GUARD_OFFSET (600, 0, 0).
+ *
+ * Extraction center: (-132, 50, -110) -> (0, 0, 0) in extracted map.
+ * Final coords = (orig - center) + offset.
+ */
 export const TREASURE_GUARD_CONFIG = {
   name: 'Treasure Guard',
   startCountdown: 15,
   mapCountdown: 10,
   matchDuration: 90, // seconds
   minPlayers: 1,
-  treasureLocation: { x: -132.5, y: 65.0, z: -109.5 },
+  treasureLocation: { x: 599.5, y: 15.0, z: 0.5 },
   playerSpawnPoints: [
-    { x: -129.5, y: 65.0, z: -114.5 },
-    { x: -132.5, y: 65.0, z: -114.5 },
-    { x: -135.5, y: 65.0, z: -114.5 },
-    { x: -138.5, y: 65.0, z: -114.5 },
+    { x: 602.5, y: 15.0, z: -4.5 },
+    { x: 599.5, y: 15.0, z: -4.5 },
+    { x: 596.5, y: 15.0, z: -4.5 },
+    { x: 593.5, y: 15.0, z: -4.5 },
   ],
   mobSpawnPoints: [
-    { x: -98.5, y: 65.0, z: -125.5 },
-    { x: -110.5, y: 65.0, z: -159.5 },
-    { x: -124.5, y: 64.0, z: -163.5 },
-    { x: -205.5, y: 65.0, z: -100.5 },
-    { x: -215.5, y: 65.0, z: -117.5 },
+    { x: 633.5, y: 15.0, z: -15.5 },
+    { x: 621.5, y: 15.0, z: -49.5 },
+    { x: 607.5, y: 14.0, z: -53.5 },
+    { x: 526.5, y: 15.0, z: 9.5 },
+    { x: 516.5, y: 15.0, z: -7.5 },
   ],
   mobs: {
     slowZombie:    { name: 'Slow Zombie',     points: 1,  speed: 1.0, chance: 20, taps: 1,  color: '#55FF55' },
@@ -177,6 +198,13 @@ export const TREASURE_GUARD_CONFIG = {
 // ============================================
 // PARKOUR RACE CONFIG
 // ============================================
+/**
+ * Parkour Race coordinates recalculated for standalone parkour-course-extracted.json
+ * placed at PARKOUR_OFFSET (0, 0, 600).
+ *
+ * Extraction center: (112, 95, -208) -> (0, 0, 0) in extracted map.
+ * Final coords = (orig - center) + offset.
+ */
 export const PARKOUR_RACE_CONFIG = {
   name: 'Parkour Race',
   startCountdown: 10,
@@ -187,31 +215,38 @@ export const PARKOUR_RACE_CONFIG = {
   deathBelowCheckpoint: 17,
   checkpointMilestones: [1, 5, 7],
   checkpoints: [
-    { x: 118.5, y: 165.0, z: -208.5 },
-    { x: 102.5, y: 171.0, z: -231.5 },
-    { x: 59.5,  y: 159.0, z: -219.5 },
-    { x: 3.5,   y: 147.0, z: -201.5 },
-    { x: -54.5, y: 136.0, z: -163.5 },
-    { x: -75.5, y: 126.0, z: -77.5  },
-    { x: -107.7,y: 117.0, z: -29.0  },
-    { x: -101.5,y: 110.0, z: 23.5   },
-    { x: -37.5, y: 121.0, z: 53.5   },
+    { x: 6.5,    y: 70.0, z: 599.5 },
+    { x: -9.5,   y: 76.0, z: 576.5 },
+    { x: -52.5,  y: 64.0, z: 588.5 },
+    { x: -108.5, y: 52.0, z: 606.5 },
+    { x: -166.5, y: 41.0, z: 644.5 },
+    { x: -187.5, y: 31.0, z: 730.5 },
+    { x: -219.7, y: 22.0, z: 779.0 },
+    { x: -213.5, y: 15.0, z: 831.5 },
+    { x: -149.5, y: 26.0, z: 861.5 },
   ],
   spawnPoints: [
-    { x: 111.5, y: 165.0, z: -208.5 },
-    { x: 111.5, y: 165.0, z: -209.5 },
-    { x: 111.5, y: 165.0, z: -207.5 },
-    { x: 113.5, y: 165.0, z: -207.5 },
-    { x: 113.5, y: 165.0, z: -208.5 },
-    { x: 113.5, y: 165.0, z: -209.5 },
-    { x: 115.5, y: 165.0, z: -208.5 },
-    { x: 116.5, y: 165.0, z: -208.5 },
+    { x: -0.5, y: 70.0, z: 599.5 },
+    { x: -0.5, y: 70.0, z: 598.5 },
+    { x: -0.5, y: 70.0, z: 600.5 },
+    { x: 1.5,  y: 70.0, z: 600.5 },
+    { x: 1.5,  y: 70.0, z: 599.5 },
+    { x: 1.5,  y: 70.0, z: 598.5 },
+    { x: 3.5,  y: 70.0, z: 599.5 },
+    { x: 4.5,  y: 70.0, z: 599.5 },
   ],
 };
 
 // ============================================
 // JETSKI RACE CONFIG
 // ============================================
+/**
+ * Jetski Race coordinates recalculated for standalone jetski-track.json
+ * placed at JETSKI_OFFSET (0, 0, -600).
+ *
+ * Extraction center: (15, 48, -70) -> (0, 0, 0) in extracted map.
+ * Final coords = (orig - center) + offset.
+ */
 export const JETSKI_RACE_CONFIG = {
   name: 'Jetski Race',
   startCountdown: 10,
@@ -221,56 +256,56 @@ export const JETSKI_RACE_CONFIG = {
   maxPlayers: 9,
   checkpointMilestones: [10, 20, 30, 40, 47],
   checkpoints: [
-    { x: -173.5, y: 63.0, z: -96.5 },
-    { x: -189.5, y: 63.0, z: -132.5 },
-    { x: -158.5, y: 63.0, z: -167.5 },
-    { x: -149.5, y: 63.0, z: -205.5 },
-    { x: -156.5, y: 63.0, z: -258.5 },
-    { x: -144.5, y: 63.0, z: -281.5 },
-    { x: -104.5, y: 63.0, z: -259.5 },
-    { x: -60.5,  y: 63.0, z: -280.5 },
-    { x: -41.5,  y: 63.0, z: -275.5 },
-    { x: -15.5,  y: 63.0, z: -258.5 },
-    { x: 5.5,    y: 63.0, z: -271.5 },
-    { x: 22.5,   y: 63.0, z: -273.5 },
-    { x: 33.5,   y: 63.0, z: -243.5 },
-    { x: 47.5,   y: 63.0, z: -233.5 },
-    { x: 75.5,   y: 63.0, z: -233.5 },
-    { x: 108.5,  y: 63.0, z: -233.5 },
-    { x: 132.5,  y: 63.0, z: -200.5 },
-    { x: 174.5,  y: 63.0, z: -198.5 },
-    { x: 200.5,  y: 63.0, z: -177.5 },
-    { x: 218.5,  y: 63.0, z: -141.5 },
-    { x: 201.5,  y: 63.0, z: -100.5 },
-    { x: 198.5,  y: 63.0, z: -41.5 },
-    { x: 203.5,  y: 63.0, z: -17.5 },
-    { x: 229.5,  y: 63.0, z: 5.5 },
-    { x: 224.5,  y: 63.0, z: 31.5 },
-    { x: 220.5,  y: 63.0, z: 80.5 },
-    { x: 209.5,  y: 63.0, z: 121.5 },
-    { x: 159.5,  y: 63.0, z: 140.5 },
-    { x: 95.5,   y: 63.0, z: 138.5 },
-    { x: 58.5,   y: 63.0, z: 122.5 },
-    { x: 44.5,   y: 63.0, z: 125.5 },
-    { x: 14.5,   y: 63.0, z: 122.5 },
-    { x: -31.5,  y: 63.0, z: 127.5 },
-    { x: -69.5,  y: 63.0, z: 122.5 },
-    { x: -82.5,  y: 63.0, z: 96.5 },
-    { x: -126.5, y: 63.0, z: 99.5 },
-    { x: -155.5, y: 63.0, z: 94.5 },
-    { x: -152.5, y: 63.0, z: 52.5 },
-    { x: -162.5, y: 63.0, z: 21.5 },
+    { x: -188.5, y: 15.0, z: -626.5 },
+    { x: -204.5, y: 15.0, z: -662.5 },
+    { x: -173.5, y: 15.0, z: -697.5 },
+    { x: -164.5, y: 15.0, z: -735.5 },
+    { x: -171.5, y: 15.0, z: -788.5 },
+    { x: -159.5, y: 15.0, z: -811.5 },
+    { x: -119.5, y: 15.0, z: -789.5 },
+    { x: -75.5,  y: 15.0, z: -810.5 },
+    { x: -56.5,  y: 15.0, z: -805.5 },
+    { x: -30.5,  y: 15.0, z: -788.5 },
+    { x: -9.5,   y: 15.0, z: -801.5 },
+    { x: 7.5,    y: 15.0, z: -803.5 },
+    { x: 18.5,   y: 15.0, z: -773.5 },
+    { x: 32.5,   y: 15.0, z: -763.5 },
+    { x: 60.5,   y: 15.0, z: -763.5 },
+    { x: 93.5,   y: 15.0, z: -763.5 },
+    { x: 117.5,  y: 15.0, z: -730.5 },
+    { x: 159.5,  y: 15.0, z: -728.5 },
+    { x: 185.5,  y: 15.0, z: -707.5 },
+    { x: 203.5,  y: 15.0, z: -671.5 },
+    { x: 186.5,  y: 15.0, z: -630.5 },
+    { x: 183.5,  y: 15.0, z: -571.5 },
+    { x: 188.5,  y: 15.0, z: -547.5 },
+    { x: 214.5,  y: 15.0, z: -524.5 },
+    { x: 209.5,  y: 15.0, z: -498.5 },
+    { x: 205.5,  y: 15.0, z: -449.5 },
+    { x: 194.5,  y: 15.0, z: -408.5 },
+    { x: 144.5,  y: 15.0, z: -389.5 },
+    { x: 80.5,   y: 15.0, z: -391.5 },
+    { x: 43.5,   y: 15.0, z: -407.5 },
+    { x: 29.5,   y: 15.0, z: -404.5 },
+    { x: -0.5,   y: 15.0, z: -407.5 },
+    { x: -46.5,  y: 15.0, z: -402.5 },
+    { x: -84.5,  y: 15.0, z: -407.5 },
+    { x: -97.5,  y: 15.0, z: -433.5 },
+    { x: -141.5, y: 15.0, z: -430.5 },
+    { x: -170.5, y: 15.0, z: -435.5 },
+    { x: -167.5, y: 15.0, z: -477.5 },
+    { x: -177.5, y: 15.0, z: -508.5 },
   ],
   spawnPoints: [
-    { x: -152.5, y: 63.0, z: -80.5 },
-    { x: -150.5, y: 63.0, z: -78.5 },
-    { x: -152.5, y: 63.0, z: -76.5 },
-    { x: -150.5, y: 63.0, z: -74.5 },
-    { x: -152.5, y: 63.0, z: -72.5 },
-    { x: -150.5, y: 63.0, z: -70.5 },
-    { x: -152.5, y: 63.0, z: -68.5 },
-    { x: -150.5, y: 63.0, z: -66.5 },
-    { x: -152.5, y: 63.0, z: -64.5 },
+    { x: -167.5, y: 15.0, z: -610.5 },
+    { x: -165.5, y: 15.0, z: -608.5 },
+    { x: -167.5, y: 15.0, z: -606.5 },
+    { x: -165.5, y: 15.0, z: -604.5 },
+    { x: -167.5, y: 15.0, z: -602.5 },
+    { x: -165.5, y: 15.0, z: -600.5 },
+    { x: -167.5, y: 15.0, z: -598.5 },
+    { x: -165.5, y: 15.0, z: -596.5 },
+    { x: -167.5, y: 15.0, z: -594.5 },
   ],
   cosmeticColors: ['red', 'blue', 'yellow', 'green', 'pink', 'orange', 'black'],
 };
@@ -338,9 +373,16 @@ export const FOOTBALL_CONFIG = {
 // ============================================
 // ARCHERY CONFIG
 // ============================================
+/**
+ * Archery coordinates recalculated for standalone archery.json
+ * placed at ARCHERY_OFFSET (900, 0, 0).
+ *
+ * Extraction center: (-49, 55, 91) -> (0, 0, 0) in extracted map.
+ * Final coords = (orig - center) + offset.
+ */
 export const ARCHERY_CONFIG = {
   name: 'Archery',
-  practiceLocation: { x: -49.5, y: 67.0, z: 91.5 },
+  practiceLocation: { x: 899.5, y: 12.0, z: 0.5 },
   practiceRadius: 49,
   matchDuration: 90, // 1.5 minutes
   minPlayers: 4,
