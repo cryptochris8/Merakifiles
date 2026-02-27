@@ -1,0 +1,31 @@
+{
+  "name": "athlete-domains-hytopia",
+  "version": "1.0.0",
+  "description": "Athlete Domains - Sports-themed multiplayer game for Hytopia",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "npx hytopia dev",
+    "build": "npx hytopia build"
+  },
+  "keywords": [
+    "hytopia",
+    "sports",
+    "multiplayer",
+    "game"
+  ],
+  "author": "Christopher - Merkari Studios",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "hytopia": "^0.15.2",
+    "minecraft-data": "^3.105.0",
+    "prismarine-block": "^1.22.0",
+    "prismarine-chunk": "^1.39.0",
+    "prismarine-nbt": "^2.8.0",
+    "prismarine-provider-anvil": "^2.11.0",
+    "prismarine-schematic": "^1.2.3"
+  },
+  "devDependencies": {
+    "nbt": "^0.8.1"
+  }
+}

@@ -1,0 +1,31 @@
+# ===== Server Backups & Archives (large files) =====
+*.gz
+*.tar.gz
+*.zip
+*.rar
+
+# ===== Old Minecraft data (47GB+) =====
+extracted/
+organized/
+
+# ===== Large map files (too big for Git) =====
+athlete-domains-hytopia/assets/maps/road.json
+athlete-domains-hytopia/assets/maps/lobby-island.json
+athlete-domains-hytopia/assets/maps/parkour-course.json
+
+# ===== Node =====
+node_modules/
+package-lock.json
+
+# ===== Hytopia build output & local dev data =====
+athlete-domains-hytopia/index.mjs
+athlete-domains-hytopia/dev/
+
+# ===== OS files =====
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ===== Misc =====
+nul
+.claude/

@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Athlete Domains</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; overflow: hidden; }
+
+    /* ===== COIN DISPLAY (HUD - always visible) ===== */
+    #coin-display {
+      position: fixed; top: 8px; left: 8px;
+      background: rgba(0,0,0,0.6); border-radius: 8px;
+      padding: 6px 14px; font-size: 14px; z-index: 40;
+    }
+    .coin-icon { color: #FFD700; margin-right: 4px; }
+    .coin-change {
+      position: fixed; top: 30px; left: 8px;
+      font-size: 16px; font-weight: bold; z-index: 41;
+      animation: coinFade 2s ease-out forwards;
+    }
+    @keyframes coinFade {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-20px); }
+    }
+
+    /* ===== GAME TIMER ===== */
+    #game-timer {
+      display: none; position: fixed; top: 8px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 8px 20px; font-size: 20px; font-weight: bold; z-index: 50;
+    }
+    #game-timer.urgent { color: #FF5555; }
+    .timer-phase { font-size: 10px; color: #aaa; text-align: center; }
+
+    /* ===== SCORE DISPLAY (Football / Sumo) ===== */
+    #score-display {
+      display: none; position: fixed; top: 8px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 8px 24px; font-size: 28px; font-weight: bold; z-index: 51;
+    }
+    .score-red { color: #FF5555; }
+    .score-blue { color: #5555FF; }
+    .score-sep { color: #888; margin: 0 12px; }
+
+    /* ===== COUNTDOWN OVERLAY ===== */
+    #countdown {
+      display: none; position: fixed; top: 40%; left: 50%; transform: translate(-50%,-50%);
+      font-size: 72px; font-weight: bold; color: #FFFF55;
+      text-shadow: 0 0 20px rgba(255,255,85,0.8); z-index: 200;
+      animation: countPulse 1s ease-in-out;
+    }
+    @keyframes countPulse {
+      0% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    }
+
+    /* ===== NOTIFICATION TOASTS ===== */
+    #notifications {
+      position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+      z-index: 300; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .notif {
+      background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 8px 20px; font-size: 14px; font-weight: 500;
+      animation: notifIn 0.3s ease-out;
+      white-space: nowrap;
+    }
+    @keyframes notifIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== SCOREBOARD ===== */
+    #scoreboard {
+      display: none; position: fixed; top: 8px; right: 8px;
+      background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 12px 16px; min-width: 200px; z-index: 50;
+    }
+    #scoreboard h4 { text-align: center; color: #55FF55; margin-bottom: 8px; font-size: 14px; }
+    .sb-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sb-row.highlight { color: #FFFF55; font-weight: bold; }
+
+    /* ===== QUEUE STATUS ===== */
+    #queue-status {
+      display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,0,0.4);
+      border-radius: 10px; padding: 12px 24px; text-align: center; z-index: 50;
+    }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #FFFF55; border-top-color: transparent;
+      border-radius: 50%; animation: spin 1s linear infinite;
+      margin-right: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #queue-leave-btn {
+      margin-top: 8px; padding: 4px 16px;
+      background: rgba(255,85,85,0.3); border: 1px solid #FF5555;
+      color: #FF5555; border-radius: 6px; cursor: pointer; font-size: 12px;
+    }
+    #queue-leave-btn:hover { background: rgba(255,85,85,0.5); }
+
+    /* ===== CHECKPOINT PROGRESS ===== */
+    #checkpoint-bar {
+      display: none; position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      width: 400px; z-index: 50;
+    }
+    .cp-track { height: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; }
+    .cp-fill { height: 100%; background: linear-gradient(90deg,#55FF55,#FFFF55); border-radius: 4px; transition: width 0.3s ease; }
+    .cp-label { text-align: center; margin-top: 4px; font-size: 12px; color: #ccc; }
+
+    /* ===== HEALTH BARS (Tower Duel) ===== */
+    #health-bars {
+      display: none; position: fixed; top: 50px; left: 50%; transform: translateX(-50%);
+      width: 500px; z-index: 50;
+    }
+    .hp-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 12px; }
+    .hp-name { width: 100px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hp-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; }
+    .hp-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+    .hp-fill.red { background: #FF5555; }
+    .hp-fill.blue { background: #5555FF; }
+
+    /* ===== SHARED OVERLAY STYLES ===== */
+    .overlay {
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      background: rgba(0,0,0,0.85); border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 16px; padding: 24px; z-index: 100;
+    }
+    .overlay h2, .overlay h3 { text-align: center; color: #55FF55; margin-bottom: 16px; }
+    .close-btn {
+      position: absolute; top: 12px; right: 16px;
+      background: none; border: none; color: #888; font-size: 20px; cursor: pointer;
+    }
+    .close-btn:hover { color: white; }
+
+    /* ===== GAME SELECTOR ===== */
+    #game-selector { width: 640px; max-height: 80vh; }
+    #game-selector h2 { text-shadow: 0 0 10px rgba(85,255,85,0.5); }
+    .game-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .game-card {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s;
+    }
+    .game-card:hover { background: rgba(85,255,85,0.15); border-color: #55FF55; transform: translateY(-2px); }
+    .game-card .icon { font-size: 32px; margin-bottom: 8px; }
+    .game-card .name { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+    .game-card .players { font-size: 11px; color: #aaa; }
+    .game-card .desc { font-size: 10px; color: #888; margin-top: 4px; }
+
+    /* ===== SUB MENUS ===== */
+    #football-menu { width: 480px; z-index: 101; }
+    #duels-menu { width: 400px; z-index: 101; }
+    #duels-menu .game-grid { grid-template-columns: repeat(2,1fr); }
+
+    /* ===== TEAM SELECTOR ===== */
+    #team-selector { width: 400px; z-index: 102; }
+    .team-btn {
+      display: inline-block; width: 45%; margin: 2.5%; padding: 20px;
+      border-radius: 10px; text-align: center; cursor: pointer;
+      font-size: 18px; font-weight: bold; transition: all 0.2s;
+    }
+    .team-red { background: rgba(255,85,85,0.3); border: 2px solid #FF5555; }
+    .team-red:hover { background: rgba(255,85,85,0.6); }
+    .team-blue { background: rgba(85,85,255,0.3); border: 2px solid #5555FF; }
+    .team-blue:hover { background: rgba(85,85,255,0.6); }
+
+    /* ===== RESULTS SCREEN ===== */
+    #results { width: 500px; text-align: center; z-index: 200; border-color: #FFD700; }
+    #results h2 { color: #FFD700; font-size: 28px; }
+    .result-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 16px; margin: 4px 0;
+      background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 14px;
+    }
+    .result-row.winner { background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.3); }
+    .result-coins { color: #55FF55; font-size: 12px; }
+    .reward-summary { color: #55FF55; font-size: 16px; margin-top: 12px; }
+    .back-btn {
+      margin-top: 16px; padding: 10px 24px;
+      background: #55FF55; color: black; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+    }
+    .back-btn:hover { background: #77FF77; }
+
+    /* ===== STATS PANEL ===== */
+    #stats-panel { width: 560px; max-height: 80vh; overflow-y: auto; }
+    .stat-row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 13px; }
+    .stat-row:nth-child(even) { background: rgba(255,255,255,0.03); }
+
+    /* ===== SHOP MENU ===== */
+    #shop-menu { width: 600px; max-height: 80vh; overflow-y: auto; }
+    .shop-coins { text-align: center; color: #FFD700; margin-bottom: 12px; font-size: 14px; }
+    .shop-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .shop-tab {
+      flex: 1; padding: 8px; text-align: center; border-radius: 6px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer; font-size: 12px; transition: all 0.2s;
+    }
+    .shop-tab.active { background: rgba(85,255,85,0.15); border-color: #55FF55; color: #55FF55; }
+    .shop-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; margin: 6px 0;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .shop-item:hover { background: rgba(85,255,85,0.1); border-color: #55FF55; }
+    .shop-item.owned { opacity: 0.6; cursor: default; }
+    .shop-item .item-info { flex: 1; }
+    .shop-item .item-name { font-weight: bold; font-size: 13px; }
+    .shop-item .item-desc { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .shop-item .item-qty { font-size: 11px; color: #FFFF55; margin-top: 2px; }
+    .shop-item .item-price { color: #FFFF55; font-weight: bold; white-space: nowrap; }
+    .shop-item .item-price.free { color: #55FF55; }
+    .shop-item .item-actions { display: flex; gap: 6px; align-items: center; }
+    .shop-btn {
+      padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer;
+      font-size: 11px; font-weight: bold;
+    }
+    .shop-btn.buy { background: #55FF55; color: black; }
+    .shop-btn.use { background: #5555FF; color: white; }
+    .shop-btn.equip { background: #FF55FF; color: white; }
+    .shop-btn.equipped { background: rgba(255,255,255,0.2); color: #aaa; cursor: default; }
+
+    /* ===== COSMETIC SHOP ===== */
+    .cosmetic-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+    .cosmetic-card {
+      text-align: center; padding: 12px 8px; border-radius: 8px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .cosmetic-card:hover { border-color: #55FF55; }
+    .cosmetic-card.equipped { border-color: #FF55FF; background: rgba(255,85,255,0.1); }
+    .cosmetic-card.owned { border-color: #55FF55; }
+    .cosmetic-swatch {
+      width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 8px;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .cosmetic-card .cosmetic-name { font-size: 11px; }
+    .cosmetic-card .cosmetic-price { font-size: 10px; color: #FFFF55; margin-top: 2px; }
+    .cosmetic-card .cosmetic-status { font-size: 10px; color: #55FF55; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ===== HUD LAYER ===== -->
+<div id="coin-display">
+  <span class="coin-icon">&#9679;</span>
+  <span id="coin-amount">0</span>
+</div>
+<div id="game-timer"></div>
+<div id="score-display"></div>
+<div id="countdown"></div>
+<div id="notifications"></div>
+
+<!-- ===== IN-GAME OVERLAYS ===== -->
+<div id="scoreboard">
+  <h4 id="sb-title">Scoreboard</h4>
+  <div id="sb-rows"></div>
+</div>
+
+<div id="queue-status">
+  <span class="spinner"></span>
+  <span id="queue-text">Searching for match...</span>
+  <br>
+  <button id="queue-leave-btn" onclick="leaveQueue()">Leave Queue</button>
+</div>
+
+<div id="checkpoint-bar">
+  <div class="cp-track"><div class="cp-fill" id="cp-fill" style="width:0%"></div></div>
+  <div class="cp-label">Checkpoint <span id="cp-current">0</span> / <span id="cp-total">0</span></div>
+</div>
+
+<div id="health-bars"></div>
+
+<!-- ===== GAME SELECTOR ===== -->
+<div id="game-selector" class="overlay">
+  <button class="close-btn" onclick="closeGameSelector()">&times;</button>
+  <h2>Game Selector</h2>
+  <div class="game-grid" id="game-grid"></div>
+</div>
+
+<!-- ===== FOOTBALL SUB-MENU ===== -->
+<div id="football-menu" class="overlay">
+  <button class="close-btn" onclick="backToGameSelector()">&times;</button>
+  <h3>Football - Select Mode</h3>
+  <div class="game-grid" id="football-grid"></div>
+</div>
+
+<!-- ===== DUELS SUB-MENU ===== -->
+<div id="duels-menu" class="overlay">
+  <button class="close-btn" onclick="backToGameSelector()">&times;</button>
+  <h3>Duels - Select Mode</h3>
+  <div class="game-grid" id="duels-grid" style="grid-template-columns:repeat(2,1fr);"></div>
+</div>
+
+<!-- ===== TEAM SELECTOR ===== -->
+<div id="team-selector" class="overlay">
+  <h3>Choose Your Team</h3>
+  <div id="team-options" style="text-align:center;"></div>
+</div>
+
+<!-- ===== RESULTS SCREEN ===== -->
+<div id="results" class="overlay">
+  <h2 id="results-title">Game Over!</h2>
+  <div id="results-rows"></div>
+  <div class="reward-summary" id="results-reward"></div>
+  <button class="back-btn" onclick="backToLobby()">Back to Lobby</button>
+</div>
+
+<!-- ===== STATS PANEL ===== -->
+<div id="stats-panel" class="overlay">
+  <button class="close-btn" onclick="closePanel('stats-panel')">&times;</button>
+  <h2 id="stats-player-name">Your Stats</h2>
+  <div id="stats-content"></div>
+</div>
+
+<!-- ===== SHOP MENU ===== -->
+<div id="shop-menu" class="overlay">
+  <button class="close-btn" onclick="closeShop()">&times;</button>
+  <h3 id="shop-title">Shop</h3>
+  <div class="shop-coins">Your coins: <span id="shop-coins">0</span></div>
+  <div id="shop-tabs" class="shop-tabs"></div>
+  <div id="shop-items"></div>
+  <div id="shop-cosmetics"></div>
+  <div id="shop-inventory"></div>
+</div>
+
+<script>
+// ===== SERVER COMMUNICATION =====
+function sendToServer(data) {
+  if (window.hytopia && window.hytopia.sendData) {
+    window.hytopia.sendData(data);
+  }
+}
+
+// ===== STATE =====
+var currentGameModes = [];
+var currentShopType = null; // 'cafe' | 'ice_cream'
+
+// ===== MENU HELPERS =====
+var allOverlays = ['game-selector','football-menu','duels-menu','team-selector','results','stats-panel','shop-menu'];
+var allHud = ['scoreboard','game-timer','score-display','countdown','queue-status','checkpoint-bar','health-bars'];
+
+function hideAllOverlays() {
+  allOverlays.forEach(function(id) { document.getElementById(id).style.display = 'none'; });
+}
+
+function hideAllHud() {
+  allHud.forEach(function(id) { document.getElementById(id).style.display = 'none'; });
+}
+
+function hideAll() {
+  hideAllOverlays();
+  hideAllHud();
+}
+
+function closePanel(id) {
+  document.getElementById(id).style.display = 'none';
+  sendToServer({ type: 'closeGameSelector' });
+}
+
+// ===== GAME SELECTOR =====
+var GAME_ICONS = {
+  'SUMO': '&#129354;', 'TOWER_DUEL': '&#127984;',
+  'TREASURE_GUARD': '&#128176;', 'PARKOUR_RACE': '&#127939;',
+  'JETSKI_RACE': '&#9973;', 'FOOTBALL': '&#9917;',
+  'FOOTBALL_2V2': '&#9917;', 'FOOTBALL_3V3': '&#9917;',
+  'ARCHERY': '&#127993;'
+};
+
+// Group game modes for the selector
+var DUEL_MODES = ['SUMO', 'TOWER_DUEL'];
+var FOOTBALL_MODES = ['FOOTBALL', 'FOOTBALL_2V2', 'FOOTBALL_3V3'];
+
+function buildGameSelector(gameModes) {
+  currentGameModes = gameModes;
+  var grid = document.getElementById('game-grid');
+  grid.innerHTML = '';
+
+  // Aggregate duel queues
+  var duelCount = 0, footballCount = 0;
+  var directModes = [];
+
+  gameModes.forEach(function(gm) {
+    if (DUEL_MODES.indexOf(gm.type) >= 0) { duelCount += gm.queueCount; }
+    else if (FOOTBALL_MODES.indexOf(gm.type) >= 0) { footballCount += gm.queueCount; }
+    else { directModes.push(gm); }
+  });
+
+  // Duels card
+  grid.innerHTML += '<div class="game-card" onclick="openDuels()">' +
+    '<div class="icon">&#9876;</div><div class="name">Duels</div>' +
+    '<div class="desc">Sumo & Tower Duel</div>' +
+    '<div class="players">' + duelCount + ' in queue</div></div>';
+
+  // Direct modes
+  directModes.forEach(function(gm) {
+    grid.innerHTML += '<div class="game-card" onclick="selectGameMode(\'' + gm.type + '\')">' +
+      '<div class="icon">' + (GAME_ICONS[gm.type] || '&#127918;') + '</div>' +
+      '<div class="name">' + gm.name + '</div>' +
+      '<div class="desc">' + gm.description + '</div>' +
+      '<div class="players">' + gm.queueCount + ' in queue</div></div>';
+  });
+
+  // Football card
+  grid.innerHTML += '<div class="game-card" onclick="openFootball()">' +
+    '<div class="icon">&#9917;</div><div class="name">Football</div>' +
+    '<div class="desc">1v1, 2v2, or 3v3</div>' +
+    '<div class="players">' + footballCount + ' in queue</div></div>';
+}
+
+function selectGameMode(type) {
+  joinQueue(type);
+}
+
+function openDuels() {
+  document.getElementById('game-selector').style.display = 'none';
+  var grid = document.getElementById('duels-grid');
+  grid.innerHTML = '';
+  currentGameModes.forEach(function(gm) {
+    if (DUEL_MODES.indexOf(gm.type) < 0) return;
+    grid.innerHTML += '<div class="game-card" onclick="joinQueue(\'' + gm.type + '\')">' +
+      '<div class="icon">' + (GAME_ICONS[gm.type] || '&#9876;') + '</div>' +
+      '<div class="name">' + gm.name + '</div>' +
+      '<div class="desc">' + gm.description + '</div>' +
+      '<div class="players">' + gm.queueCount + ' in queue</div></div>';
+  });
+  document.getElementById('duels-menu').style.display = 'block';
+}
+
+function openFootball() {
+  document.getElementById('game-selector').style.display = 'none';
+  var grid = document.getElementById('football-grid');
+  grid.innerHTML = '';
+  currentGameModes.forEach(function(gm) {
+    if (FOOTBALL_MODES.indexOf(gm.type) < 0) return;
+    grid.innerHTML += '<div class="game-card" onclick="joinQueue(\'' + gm.type + '\')">' +
+      '<div class="icon">' + (GAME_ICONS[gm.type] || '&#9917;') + '</div>' +
+      '<div class="name">' + gm.name + '</div>' +
+      '<div class="desc">' + gm.description + '</div>' +
+      '<div class="players">' + gm.queueCount + ' in queue</div></div>';
+  });
+  document.getElementById('football-menu').style.display = 'block';
+}
+
+function backToGameSelector() {
+  document.getElementById('football-menu').style.display = 'none';
+  document.getElementById('duels-menu').style.display = 'none';
+  document.getElementById('game-selector').style.display = 'block';
+}
+
+function closeGameSelector() {
+  document.getElementById('game-selector').style.display = 'none';
+  sendToServer({ type: 'closeGameSelector' });
+}
+
+// ===== QUEUE =====
+function joinQueue(gameModeType) {
+  hideAllOverlays();
+  document.getElementById('queue-status').style.display = 'block';
+  document.getElementById('queue-text').textContent = 'Searching for match...';
+  sendToServer({ type: 'joinQueue', gameModeType: gameModeType });
+}
+
+function leaveQueue() {
+  sendToServer({ type: 'leaveQueue' });
+}
+
+// ===== TEAM SELECTION =====
+function buildTeamSelector(gameModeName, teams) {
+  hideAllOverlays();
+  var el = document.getElementById('team-options');
+  el.innerHTML = '';
+  teams.forEach(function(t) {
+    el.innerHTML += '<div class="team-btn" style="background:' + t.color + '33; border:2px solid ' + t.color + ';" ' +
+      'onclick="selectTeam(\'' + t.id + '\')">' +
+      '<div>' + t.name.toUpperCase() + '</div>' +
+      '<div style="font-size:12px; margin-top:4px;">' + t.playerCount + '/' + t.maxPlayers + '</div></div>';
+  });
+  document.getElementById('team-selector').style.display = 'block';
+}
+
+function selectTeam(teamId) {
+  document.getElementById('team-selector').style.display = 'none';
+  sendToServer({ type: 'selectTeam', teamId: teamId });
+}
+
+// ===== SCOREBOARD =====
+function updateScoreboard(gameModeName, entries) {
+  document.getElementById('scoreboard').style.display = 'block';
+  document.getElementById('sb-title').textContent = gameModeName || 'Scoreboard';
+  var rows = document.getElementById('sb-rows');
+  rows.innerHTML = '';
+  entries.forEach(function(e) {
+    var cls = 'sb-row' + (e.team ? ' team-' + e.team : '');
+    rows.innerHTML += '<div class="' + cls + '"><span>' + e.playerName + '</span><span>' + e.score + '</span></div>';
+  });
+}
+
+// ===== TIMER =====
+function updateTimer(timeFormatted, timeRemaining, phase) {
+  var el = document.getElementById('game-timer');
+  el.style.display = 'block';
+  el.innerHTML = '<div>' + timeFormatted + '</div>' +
+    (phase ? '<div class="timer-phase">' + phase + '</div>' : '');
+  el.className = timeRemaining <= 10 ? 'urgent' : '';
+}
+
+// ===== COUNTDOWN =====
+function showCountdown(seconds) {
+  var el = document.getElementById('countdown');
+  el.style.display = 'block';
+  el.textContent = seconds === 0 ? 'GO!' : seconds;
+  el.style.color = seconds === 0 ? '#55FF55' : '#FFFF55';
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'countPulse 1s ease-in-out';
+  if (seconds === 0) setTimeout(function() { el.style.display = 'none'; }, 1500);
+}
+
+// ===== NOTIFICATIONS =====
+function showNotification(message, color, durationMs) {
+  var container = document.getElementById('notifications');
+  var el = document.createElement('div');
+  el.className = 'notif';
+  el.style.color = color || '#FFFFFF';
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(function() {
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.3s';
+    setTimeout(function() { el.remove(); }, 300);
+  }, durationMs || 3000);
+}
+
+// ===== SCORE DISPLAY =====
+function showScore(redScore, blueScore) {
+  var el = document.getElementById('score-display');
+  el.style.display = 'block';
+  el.innerHTML = '<span class="score-red">' + redScore + '</span>' +
+    '<span class="score-sep">-</span>' +
+    '<span class="score-blue">' + blueScore + '</span>';
+}
+
+// ===== CHECKPOINT BAR =====
+function updateCheckpoint(current, total) {
+  document.getElementById('checkpoint-bar').style.display = 'block';
+  document.getElementById('cp-current').textContent = current;
+  document.getElementById('cp-total').textContent = total;
+  document.getElementById('cp-fill').style.width = (current / total * 100) + '%';
+}
+
+// ===== HEALTH BARS =====
+function updateHealthBars(players) {
+  var el = document.getElementById('health-bars');
+  el.style.display = 'block';
+  el.innerHTML = '';
+  players.forEach(function(p) {
+    var pct = (p.currentHp / p.maxHp * 100);
+    var color = p.team === 'blue' ? 'blue' : 'red';
+    el.innerHTML += '<div class="hp-row"><span class="hp-name">' + p.playerName + '</span>' +
+      '<div class="hp-bar"><div class="hp-fill ' + color + '" style="width:' + pct + '%"></div></div>' +
+      '<span style="width:40px;text-align:right;font-size:11px;">' + p.currentHp + '</span></div>';
+  });
+}
+
+// ===== RESULTS =====
+function showResults(gameModeName, results) {
+  hideAll();
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results-title').textContent = gameModeName + ' - Results';
+  var rows = document.getElementById('results-rows');
+  rows.innerHTML = '';
+  results.forEach(function(r) {
+    var cls = 'result-row' + (r.isWinner ? ' winner' : '');
+    rows.innerHTML += '<div class="' + cls + '">' +
+      '<span>#' + r.placement + ' ' + r.playerName + '</span>' +
+      '<span>' + r.score + ' pts</span>' +
+      '<span class="result-coins">+' + r.coinsEarned + ' coins</span></div>';
+  });
+}
+
+// ===== STATS =====
+function showStats(playerName, stats) {
+  hideAllOverlays();
+  document.getElementById('stats-panel').style.display = 'block';
+  document.getElementById('stats-player-name').textContent = playerName + "'s Stats";
+  var content = document.getElementById('stats-content');
+  content.innerHTML = '';
+  for (var key in stats) {
+    content.innerHTML += '<div class="stat-row"><span>' + key + '</span><span>' + stats[key] + '</span></div>';
+  }
+}
+
+// ===== COIN UPDATE =====
+function updateCoins(balance, change) {
+  document.getElementById('coin-amount').textContent = balance.toLocaleString();
+  if (change !== 0) {
+    var el = document.createElement('div');
+    el.className = 'coin-change';
+    el.style.color = change > 0 ? '#55FF55' : '#FF5555';
+    el.textContent = (change > 0 ? '+' : '') + change;
+    document.body.appendChild(el);
+    setTimeout(function() { el.remove(); }, 2000);
+  }
+}
+
+// ===== SHOP =====
+function openShop(data) {
+  hideAllOverlays();
+  currentShopType = data.type;
+  document.getElementById('shop-menu').style.display = 'block';
+  document.getElementById('shop-title').textContent = data.shopName;
+  document.getElementById('shop-coins').textContent = (data.playerCoins || 0).toLocaleString();
+
+  // Build items tab
+  var itemsEl = document.getElementById('shop-items');
+  itemsEl.innerHTML = '';
+  (data.items || []).forEach(function(item) {
+    var priceText = item.price === 0 ? 'FREE' : item.price + ' coins';
+    var priceClass = item.price === 0 ? 'item-price free' : 'item-price';
+    if (item.isMysteryBoxFree) { priceText = 'FREE TODAY'; priceClass = 'item-price free'; }
+
+    itemsEl.innerHTML += '<div class="shop-item" onclick="buyBooster(\'' + item.boosterId + '\')">' +
+      '<div class="item-info"><div class="item-name">' + item.name + '</div>' +
+      '<div class="item-desc">' + (item.description || '') + '</div>' +
+      (item.ownedQuantity > 0 ? '<div class="item-qty">Owned: ' + item.ownedQuantity + '</div>' : '') +
+      '</div><div class="item-actions">' +
+      (item.ownedQuantity > 0 ? '<button class="shop-btn use" onclick="event.stopPropagation(); useBooster(\'' + item.boosterId + '\')">Use</button>' : '') +
+      '<span class="' + priceClass + '">' + priceText + '</span>' +
+      '</div></div>';
+  });
+
+  // Build inventory section
+  var invEl = document.getElementById('shop-inventory');
+  invEl.innerHTML = '';
+  if (data.inventory && data.inventory.length > 0) {
+    invEl.innerHTML = '<h4 style="color:#FFFF55; margin:12px 0 8px;">Your Boosters</h4>';
+    data.inventory.forEach(function(b) {
+      invEl.innerHTML += '<div class="shop-item" onclick="useBooster(\'' + b.boosterId + '\')">' +
+        '<div class="item-info"><div class="item-name">' + b.name + '</div></div>' +
+        '<div class="item-actions"><span style="color:#aaa;">x' + b.quantity + '</span>' +
+        '<button class="shop-btn use">Use</button></div></div>';
+    });
+  }
+
+  // Clear cosmetics section (only for ice cream shop)
+  document.getElementById('shop-cosmetics').innerHTML = '';
+}
+
+function buyBooster(boosterId) {
+  sendToServer({ type: 'shop:buy', boosterId: boosterId });
+}
+
+function useBooster(boosterId) {
+  sendToServer({ type: 'shop:consume', boosterId: boosterId });
+}
+
+function buyCosmetic(cosmeticId) {
+  sendToServer({ type: 'shop:buy_cosmetic', cosmeticId: cosmeticId });
+}
+
+function equipCosmetic(cosmeticId) {
+  sendToServer({ type: 'shop:equip_cosmetic', cosmeticId: cosmeticId });
+}
+
+function closeShop() {
+  document.getElementById('shop-menu').style.display = 'none';
+  sendToServer({ type: 'shop:close' });
+}
+
+function backToLobby() {
+  hideAll();
+  sendToServer({ type: 'openGameSelector' });
+}
+
+// ===== FOOTBALL-SPECIFIC UI =====
+function handleFootballUI(payload) {
+  if (!payload) return;
+  if (payload.redScore !== undefined && payload.blueScore !== undefined) {
+    showScore(payload.redScore, payload.blueScore);
+  }
+  if (payload.timer !== undefined) {
+    var m = Math.floor(payload.timer / 60);
+    var s = payload.timer % 60;
+    updateTimer(m + ':' + (s < 10 ? '0' : '') + s, payload.timer, payload.state || '');
+  }
+}
+
+// ===== TOWER DUEL UI =====
+function handleTowerDuelUI(payload) {
+  if (!payload) return;
+  // Show HP bars for knights and archers
+  var players = [];
+  (payload.knights || []).forEach(function(k) {
+    players.push({ playerName: k.name + ' (Knight)', currentHp: k.hp, maxHp: k.maxHp, team: k.team });
+  });
+  (payload.archers || []).forEach(function(a) {
+    players.push({ playerName: a.name + ' (Archer)', currentHp: a.hp, maxHp: a.maxHp, team: a.team });
+  });
+  if (players.length > 0) updateHealthBars(players);
+  if (payload.timer !== undefined) {
+    var m = Math.floor(payload.timer / 60);
+    var s = payload.timer % 60;
+    updateTimer(m + ':' + (s < 10 ? '0' : '') + s, payload.timer, 'Round ' + (payload.round || 1));
+  }
+}
+
+// ===== SUMO UI =====
+function handleSumoUI(payload) {
+  if (!payload) return;
+  if (payload.timer !== undefined) {
+    var m = Math.floor(payload.timer / 60);
+    var s = payload.timer % 60;
+    updateTimer(m + ':' + (s < 10 ? '0' : '') + s, payload.timer, payload.state || '');
+  }
+  // Show player scores as scoreboard
+  if (payload.players && payload.players.length > 0) {
+    updateScoreboard('Sumo', payload.players.map(function(p) {
+      return { playerName: p.name || p.playerName, score: p.score || p.wins || 0 };
+    }));
+  }
+}
+
+// ===== MAIN EVENT ROUTER =====
+if (window.hytopia) {
+  window.hytopia.onData = function(data) {
+    if (!data || !data.type) return;
+
+    switch (data.type) {
+
+      // ===== CORE UI EVENTS =====
+      case 'showGameSelector':
+        hideAllOverlays();
+        buildGameSelector(data.gameModes || []);
+        document.getElementById('game-selector').style.display = 'block';
+        break;
+
+      case 'hideGameSelector':
+        document.getElementById('game-selector').style.display = 'none';
+        document.getElementById('football-menu').style.display = 'none';
+        document.getElementById('duels-menu').style.display = 'none';
+        break;
+
+      case 'showScoreboard':
+        updateScoreboard(data.gameModeName, data.entries || []);
+        break;
+
+      case 'updateTimer':
+        updateTimer(data.timeFormatted, data.timeRemaining, data.phase);
+        break;
+
+      case 'showResults':
+        showResults(data.gameModeName, data.results || []);
+        break;
+
+      case 'showStats':
+        showStats(data.playerName, data.stats || {});
+        break;
+
+      case 'showQueueStatus':
+        hideAllOverlays();
+        document.getElementById('queue-status').style.display = 'block';
+        document.getElementById('queue-text').textContent =
+          'Searching for ' + (data.gameModeName || 'match') + '... (' + data.totalInQueue + ' in queue)';
+        break;
+
+      case 'hideQueueStatus':
+        document.getElementById('queue-status').style.display = 'none';
+        break;
+
+      case 'showTeamSelection':
+        buildTeamSelector(data.gameModeName, data.teams || []);
+        break;
+
+      case 'hideTeamSelection':
+        document.getElementById('team-selector').style.display = 'none';
+        break;
+
+      case 'showNotification':
+        showNotification(data.message, data.color, data.durationMs);
+        break;
+
+      case 'coinUpdate':
+        updateCoins(data.balance, data.change);
+        break;
+
+      case 'hideAll':
+        hideAll();
+        break;
+
+      // ===== SHOP EVENTS =====
+      case 'shop:cafe_menu':
+      case 'shop:ice_cream_menu':
+        openShop(data);
+        break;
+
+      case 'shop:error':
+      case 'booster:error':
+      case 'cosmetic:error':
+        showNotification(data.message, '#FF5555', 4000);
+        break;
+
+      case 'shop:purchased':
+        showNotification('Purchased ' + data.boosterName + ' for ' + data.price + ' coins!', '#55FF55', 3000);
+        break;
+
+      case 'shop:mystery_box_opened':
+        showNotification('Mystery Box: You got ' + data.receivedBoosterName + '!' + (data.wasFree ? ' (Free daily!)' : ''), '#FFD700', 5000);
+        break;
+
+      case 'booster:consumed':
+        showNotification('Activated ' + data.boosterName + '! (' + data.remainingQuantity + ' remaining)', '#5555FF', 3000);
+        break;
+
+      case 'booster:activated':
+        showNotification(data.boosterName + ' active!', '#55FFFF', 3000);
+        break;
+
+      case 'cosmetic:purchased':
+        showNotification('Unlocked ' + data.cosmeticName + '!', '#FF55FF', 3000);
+        break;
+
+      case 'cosmetic:equipped':
+        showNotification('Equipped ' + data.cosmeticName + '!', '#FF55FF', 3000);
+        break;
+
+      // ===== FOOTBALL EVENTS =====
+      case 'FOOTBALL_UI_UPDATE':
+        handleFootballUI(data.payload);
+        break;
+
+      case 'FOOTBALL_GOAL':
+        showNotification('GOAL! ' + (data.payload.scoringTeam === 'red' ? 'Red' : 'Blue') + ' scores!',
+          data.payload.scoringTeam === 'red' ? '#FF5555' : '#5555FF', 3000);
+        if (data.payload.newScore) showScore(data.payload.newScore.red || 0, data.payload.newScore.blue || 0);
+        break;
+
+      case 'FOOTBALL_COUNTDOWN':
+        showCountdown(data.payload.seconds);
+        break;
+
+      case 'FOOTBALL_TEAM_ASSIGNMENT':
+        showNotification('You are on ' + data.payload.team.toUpperCase() + ' team!',
+          data.payload.teamColor || '#FFFFFF', 5000);
+        break;
+
+      case 'FOOTBALL_MATCH_END':
+        showNotification(data.payload.winner.toUpperCase() + ' team wins!',
+          data.payload.winner === 'red' ? '#FF5555' : '#5555FF', 5000);
+        break;
+
+      case 'FOOTBALL_KICK':
+      case 'FOOTBALL_RESUME':
+      case 'FOOTBALL_PLAYER_JOINED':
+      case 'FOOTBALL_PLAYER_LEFT':
+        break; // handled silently
+
+      // ===== SUMO EVENTS =====
+      case 'SUMO_UI_UPDATE':
+        handleSumoUI(data.payload);
+        break;
+
+      case 'SUMO_COUNTDOWN':
+        showCountdown(data.payload.seconds);
+        break;
+
+      case 'SUMO_MATCH_OVER':
+        showNotification(data.payload.winnerName + ' wins!', '#FFD700', 5000);
+        break;
+
+      case 'SUMO_PUNCH_HIT':
+        break; // visual feedback handled by game engine
+
+      case 'SUMO_PUNCH_RECEIVED':
+        break; // could add screen shake effect later
+
+      // ===== TOWER DUEL EVENTS =====
+      case 'TOWER_DUEL_UI_UPDATE':
+        handleTowerDuelUI(data.payload);
+        break;
+
+      case 'TOWER_DUEL_ROUND_START':
+        showNotification('Round ' + data.payload.round + ' - Fight!', '#55FF55', 3000);
+        break;
+
+      case 'TOWER_DUEL_ROUND_END':
+        showNotification('Round ' + data.payload.round + ' won by ' + data.payload.winnerName + '!', '#FFD700', 3000);
+        break;
+
+      case 'TOWER_DUEL_ROUND_DRAW':
+        showNotification('Round ' + data.payload.round + ' - Draw!', '#FFFF55', 3000);
+        break;
+
+      case 'TOWER_DUEL_KILL':
+        showNotification(data.payload.killerName + ' eliminated ' + data.payload.deadName + '!', '#FF5555', 3000);
+        break;
+
+      case 'TOWER_DUEL_HP_UPDATE':
+        break; // handled by UI_UPDATE
+
+      case 'TOWER_DUEL_DAMAGE_TAKEN':
+        break; // could add damage flash
+
+      case 'TOWER_DUEL_ROLE_ASSIGNMENT':
+        showNotification('You are ' + data.payload.role.toUpperCase() + ' on ' + data.payload.team.toUpperCase() + ' team!', '#55FFFF', 5000);
+        break;
+
+      case 'TOWER_DUEL_MATCH_END':
+        showNotification(data.payload.winner.toUpperCase() + ' team wins!', '#FFD700', 5000);
+        break;
+
+      case 'TOWER_DUEL_MELEE_HIT':
+      case 'TOWER_DUEL_ARROW_HIT':
+        break; // visual feedback
+
+      // ===== PARKOUR EVENTS =====
+      case 'parkourState':
+        updateCheckpoint(data.checkpoint, data.totalCheckpoints);
+        if (data.finished) {
+          showNotification('You finished the parkour course!', '#55FF55', 5000);
+        }
+        if (data.leaderboard && data.leaderboard.length > 0) {
+          updateScoreboard('Parkour Race', data.leaderboard.map(function(e) {
+            return { playerName: e.playerName || e.name, score: e.checkpoint || e.checkpoints || 0 };
+          }));
+        }
+        break;
+
+      // ===== JETSKI EVENTS =====
+      case 'jetskiState':
+        updateCheckpoint(data.checkpoint, data.totalCheckpoints);
+        if (data.finished && data.finishPosition) {
+          showNotification('You finished #' + data.finishPosition + '!', '#55FF55', 5000);
+        }
+        if (data.leaderboard && data.leaderboard.length > 0) {
+          updateScoreboard('Jetski Race', data.leaderboard.map(function(e) {
+            return { playerName: e.playerName || e.name, score: e.checkpoint || e.checkpoints || 0 };
+          }));
+        }
+        break;
+
+      case 'jetskiLeaderboard':
+        if (data.leaderboard && data.leaderboard.length > 0) {
+          updateScoreboard('Jetski Race', data.leaderboard.map(function(e) {
+            return { playerName: e.playerName || e.name, score: e.checkpoint || e.checkpoints || 0 };
+          }));
+        }
+        break;
+
+      case 'jetskiFinishCountdown':
+        showNotification('Race ends in ' + data.remaining + 's!', '#FFFF55', 1500);
+        break;
+
+      default:
+        break;
+    }
+  };
+}
+</script>
+</body>
+</html>
