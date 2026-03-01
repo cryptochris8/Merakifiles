@@ -27,12 +27,12 @@ import { CosmeticManager } from './CosmeticManager';
 // ============================================
 
 /** Cafe NPC location in the city near the stadium. */
-const CAFE_NPC_POSITION = { x: 5.5, y: 24.0, z: -585.0 };
+const CAFE_NPC_POSITION = { x: 5.5, y: 3.79, z: -585.0 };
 
 /** Ice cream stand NPCs in the city near the stadium. */
 const ICE_CREAM_NPC_POSITIONS = [
-  { x: -8.5, y: 24.0, z: -585.0 },
-  { x: -5.5, y: 24.0, z: -585.0 },
+  { x: -8.5, y: 3.79, z: -585.0 },
+  { x: -5.5, y: 3.79, z: -585.0 },
 ];
 
 // ============================================

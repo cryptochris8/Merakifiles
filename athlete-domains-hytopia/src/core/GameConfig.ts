@@ -84,9 +84,9 @@ export const RANK_CONFIG: Record<Rank, { name: string; color: string; prefix: st
 // ============================================
 export const LOBBY_CONFIG = {
   /** Spawn position in the city, between the soccer stadium and bowling alley. */
-  spawnPosition: { x: -1.5, y: 24.0, z: -581.0 },
-  /** Y level below which lobby players get teleported back (city ground level). */
-  platformY: 23,
+  spawnPosition: { x: -1.5, y: 3.79, z: -581.0 },
+  /** Y level of the city ground (legacy field). */
+  platformY: 7,
   /** Half-size of the lobby platform (legacy, no longer used for platform). */
   platformSize: 10,
   maxPlayersPerParty: 2,

@@ -61,49 +61,49 @@ const LOBBY_NPCS: LobbyNPC[] = [
     gameModeType: GameModeType.SUMO,
     name: 'Sumo',
     modelUri: 'models/players/player.gltf',
-    position: { x: -10.5, y: 24.0, z: -575.0 },
+    position: { x: -23.14, y: 6.29, z: -559.41 },
     tag: 'npc_sumo',
   },
   {
     gameModeType: GameModeType.FOOTBALL,
     name: 'Football',
     modelUri: 'models/players/player.gltf',
-    position: { x: -7.5, y: 24.0, z: -575.0 },
+    position: { x: -18.14, y: 6.29, z: -559.41 },
     tag: 'npc_football',
   },
   {
     gameModeType: GameModeType.TOWER_DUEL,
     name: 'Tower Duel',
     modelUri: 'models/players/player.gltf',
-    position: { x: -4.5, y: 24.0, z: -575.0 },
+    position: { x: -13.14, y: 6.29, z: -559.41 },
     tag: 'npc_tower_duel',
   },
   {
     gameModeType: GameModeType.TREASURE_GUARD,
     name: 'Treasure Guard',
     modelUri: 'models/players/player.gltf',
-    position: { x: -1.5, y: 24.0, z: -575.0 },
+    position: { x: -8.14, y: 6.29, z: -559.41 },
     tag: 'npc_treasure_guard',
   },
   {
     gameModeType: GameModeType.PARKOUR_RACE,
     name: 'Parkour',
     modelUri: 'models/players/player.gltf',
-    position: { x: 1.5, y: 24.0, z: -575.0 },
+    position: { x: -3.14, y: 6.29, z: -559.41 },
     tag: 'npc_parkour',
   },
   {
     gameModeType: GameModeType.JETSKI_RACE,
     name: 'Jetski Race',
     modelUri: 'models/players/player.gltf',
-    position: { x: 4.5, y: 24.0, z: -575.0 },
+    position: { x: 1.86, y: 6.29, z: -559.41 },
     tag: 'npc_jetski',
   },
   {
     gameModeType: GameModeType.ARCHERY,
     name: 'Archery',
     modelUri: 'models/players/player.gltf',
-    position: { x: 7.5, y: 24.0, z: -575.0 },
+    position: { x: 6.86, y: 6.29, z: -559.41 },
     tag: 'npc_archery',
   },
 ];
@@ -389,6 +389,7 @@ export class GameManager {
       });
 
       npc.spawn(this.world, npcConfig.position);
+      npc.setModelScale(3);
       this.lobbyNPCs.push(npc);
     }
 
