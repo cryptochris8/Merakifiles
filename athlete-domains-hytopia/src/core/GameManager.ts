@@ -14,6 +14,8 @@ import {
   Entity,
   RigidBodyType,
   ColliderShape,
+  EntityEvent,
+  PlayerCameraMode,
 } from 'hytopia';
 import type { World, Vector3Like } from 'hytopia';
 import {
@@ -50,58 +52,58 @@ interface LobbyNPC {
 }
 
 /**
- * Default NPC positions on the lobby platform (Y=82, centered at origin).
- * Only enabled game modes get NPCs. NPCs are spaced along the X axis.
+ * NPC positions in the city, lined up in front of the soccer stadium.
+ * NPCs are spaced along the X axis near the stadium entrance.
  * We use the Hytopia default player model since custom NPC models don't exist yet.
  */
 const LOBBY_NPCS: LobbyNPC[] = [
   {
     gameModeType: GameModeType.SUMO,
-    name: 'Sumo NPC',
+    name: 'Sumo',
     modelUri: 'models/players/player.gltf',
-    position: { x: -6.5, y: 81.0, z: -2.5 },
+    position: { x: -10.5, y: 24.0, z: -575.0 },
     tag: 'npc_sumo',
   },
   {
     gameModeType: GameModeType.FOOTBALL,
-    name: 'Football NPC',
+    name: 'Football',
     modelUri: 'models/players/player.gltf',
-    position: { x: -3.5, y: 81.0, z: -2.5 },
+    position: { x: -7.5, y: 24.0, z: -575.0 },
     tag: 'npc_football',
   },
   {
     gameModeType: GameModeType.TOWER_DUEL,
-    name: 'Tower Duel NPC',
+    name: 'Tower Duel',
     modelUri: 'models/players/player.gltf',
-    position: { x: -0.5, y: 81.0, z: -2.5 },
+    position: { x: -4.5, y: 24.0, z: -575.0 },
     tag: 'npc_tower_duel',
   },
   {
     gameModeType: GameModeType.TREASURE_GUARD,
-    name: 'Treasure Guard NPC',
+    name: 'Treasure Guard',
     modelUri: 'models/players/player.gltf',
-    position: { x: 2.5, y: 81.0, z: -2.5 },
+    position: { x: -1.5, y: 24.0, z: -575.0 },
     tag: 'npc_treasure_guard',
   },
   {
     gameModeType: GameModeType.PARKOUR_RACE,
-    name: 'Parkour NPC',
+    name: 'Parkour',
     modelUri: 'models/players/player.gltf',
-    position: { x: 5.5, y: 81.0, z: -2.5 },
+    position: { x: 1.5, y: 24.0, z: -575.0 },
     tag: 'npc_parkour',
   },
   {
     gameModeType: GameModeType.JETSKI_RACE,
-    name: 'Jetski NPC',
+    name: 'Jetski Race',
     modelUri: 'models/players/player.gltf',
-    position: { x: -4.5, y: 81.0, z: 2.5 },
+    position: { x: 4.5, y: 24.0, z: -575.0 },
     tag: 'npc_jetski',
   },
   {
     gameModeType: GameModeType.ARCHERY,
-    name: 'Archery NPC',
+    name: 'Archery',
     modelUri: 'models/players/player.gltf',
-    position: { x: 4.5, y: 81.0, z: 2.5 },
+    position: { x: 7.5, y: 24.0, z: -575.0 },
     tag: 'npc_archery',
   },
 ];
@@ -378,6 +380,14 @@ export class GameManager {
         },
       });
 
+      npc.on(EntityEvent.INTERACT, (payload: { entity: Entity; player: Player }) => {
+        const { player } = payload;
+        // If player is already in a match, ignore.
+        if (this.matchManager.getPlayerMatch(player)) return;
+        // Open the game selector UI for this game mode.
+        this.uiManager.showGameSelector(player);
+      });
+
       npc.spawn(this.world, npcConfig.position);
       this.lobbyNPCs.push(npc);
     }
@@ -435,6 +445,10 @@ export class GameManager {
     });
     playerEntity.spawn(this.world, LOBBY_CONFIG.spawnPosition);
     this.playerEntities.set(player.id, playerEntity);
+
+    // Attach camera to player entity in third-person mode.
+    player.camera.setAttachedToEntity(playerEntity);
+    player.camera.setMode(PlayerCameraMode.THIRD_PERSON);
 
     // Load the main UI.
     this.uiManager.loadMainUI(player);
@@ -756,6 +770,27 @@ export class GameManager {
 
     chatManager.registerCommand('/games', (player: Player, _args: string[], _message: string) => {
       this.uiManager.showGameSelector(player);
+    });
+
+    // Debug: toggle spectator camera for scouting coordinates.
+    chatManager.registerCommand('/spectator', (player: Player, _args: string[], _message: string) => {
+      const cam = player.camera;
+      if (cam.mode === PlayerCameraMode.SPECTATOR) {
+        cam.setMode(PlayerCameraMode.THIRD_PERSON);
+        this.world?.chatManager.sendPlayerMessage(player, 'Camera: third-person', '55FF55');
+      } else {
+        cam.setMode(PlayerCameraMode.SPECTATOR);
+        this.world?.chatManager.sendPlayerMessage(player, 'Camera: spectator (fly around freely)', '55FF55');
+      }
+    });
+
+    // Debug: print current position to chat.
+    chatManager.registerCommand('/pos', (player: Player, _args: string[], _message: string) => {
+      const pe = this.playerEntities.get(player.id);
+      if (!pe) return;
+      const p = pe.position;
+      const msg = `Position: x=${p.x.toFixed(1)}, y=${p.y.toFixed(1)}, z=${p.z.toFixed(1)}`;
+      this.world?.chatManager.sendPlayerMessage(player, msg, '55FFFF');
     });
   }
 

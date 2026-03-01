@@ -18,8 +18,8 @@ import {
 import { GameManager } from './src/core/GameManager';
 import { ShopManager } from './src/economy/ShopManager';
 import { PlayerDataManager } from './src/core/PlayerDataManager';
-import { Rank, ARENA_MAPS, LOBBY_CONFIG } from './src/core/GameConfig';
-import { mergeArenaMaps, addLobbyPlatform } from './src/core/MapLoader';
+import { Rank, ARENA_MAPS } from './src/core/GameConfig';
+import { mergeArenaMaps } from './src/core/MapLoader';
 
 // ============================================
 // LOAD & MERGE ARENA MAPS
@@ -30,16 +30,7 @@ const assetsDir = join(__dirname, 'assets');
 
 console.log('[AthleteDomains] Merging arena maps...');
 const worldMap = mergeArenaMaps(assetsDir, ARENA_MAPS);
-
-// Build a lobby platform above the sumo arena. Use block type 0 (first
-// registered block type — typically a concrete variant from sumo-arena.json).
-addLobbyPlatform(
-  worldMap,
-  { x: 0, y: LOBBY_CONFIG.platformY, z: 0 },
-  LOBBY_CONFIG.platformSize,
-  1,
-);
-console.log('[AthleteDomains] Lobby platform added at Y=' + LOBBY_CONFIG.platformY);
+console.log('[AthleteDomains] Arena maps merged. Lobby is in the city near the stadium.');
 
 // ============================================
 // SERVER ENTRY POINT

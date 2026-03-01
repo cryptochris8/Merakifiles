@@ -26,13 +26,13 @@ import { CosmeticManager } from './CosmeticManager';
 // NPC PLACEMENT CONFIG
 // ============================================
 
-/** Cafe NPC location on the lobby platform (Y=80 platform, so NPC at Y=81). */
-const CAFE_NPC_POSITION = { x: 5.5, y: 81.0, z: -5.5 };
+/** Cafe NPC location in the city near the stadium. */
+const CAFE_NPC_POSITION = { x: 5.5, y: 24.0, z: -585.0 };
 
-/** Ice cream stand NPCs on the lobby platform. */
+/** Ice cream stand NPCs in the city near the stadium. */
 const ICE_CREAM_NPC_POSITIONS = [
-  { x: -5.5, y: 81.0, z: -5.5 },
-  { x: -5.5, y: 81.0, z: 5.5 },
+  { x: -8.5, y: 24.0, z: -585.0 },
+  { x: -5.5, y: 24.0, z: -585.0 },
 ];
 
 // ============================================
