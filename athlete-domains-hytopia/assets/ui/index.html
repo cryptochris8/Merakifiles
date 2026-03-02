@@ -726,6 +726,24 @@ function handleSumoUI(payload) {
   }
 }
 
+// ===== ESCAPE KEY HANDLER =====
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    // Close any open overlay and tell the server to re-lock pointer
+    var anyOpen = false;
+    allOverlays.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.style.display !== 'none') {
+        el.style.display = 'none';
+        anyOpen = true;
+      }
+    });
+    if (anyOpen) {
+      sendToServer({ type: 'closeGameSelector' });
+    }
+  }
+});
+
 // ===== MAIN EVENT ROUTER =====
 if (window.hytopia) {
   window.hytopia.onData = function(data) {
