@@ -15,6 +15,7 @@
 import {
   Entity,
   PlayerEntity,
+  DefaultPlayerEntity,
   Player,
   World,
   RigidBodyType,
@@ -22,7 +23,6 @@ import {
   CollisionGroup,
   PlayerEvent,
   EntityEvent,
-  DefaultPlayerEntityController,
   type Vector3Like,
 } from 'hytopia';
 
@@ -128,13 +128,10 @@ export default class ParkourRaceGame extends BaseGameMode {
     const sp = this.config.spawnPoints[Math.max(0, spawnIndex)];
     const spawnPos: Vector3Like = { x: sp.x, y: sp.y, z: sp.z };
 
-    // Create and spawn the player entity
-    const playerEntity = new PlayerEntity({
+    // Create and spawn the player entity (DefaultPlayerEntity auto-attaches camera)
+    const playerEntity = new DefaultPlayerEntity({
       player,
       name: player.username,
-      modelUri: 'models/players/player.gltf',
-      modelScale: 0.5,
-      controller: new DefaultPlayerEntityController(),
     });
 
     playerEntity.spawn(this.world, spawnPos);
@@ -177,7 +174,7 @@ export default class ParkourRaceGame extends BaseGameMode {
   }
 
   protected onTick(tickDeltaMs: number): void {
-    // Fall detection: check each player's Y against their last checkpoint
+    // Fall detection: respawn if player falls below the absolute Y floor
     for (const player of this.players) {
       const gp = this.gamePlayers.get(player.id);
       const pd = this.parkourData.get(player.id);
@@ -185,7 +182,7 @@ export default class ParkourRaceGame extends BaseGameMode {
 
       const pos = gp.playerEntity.position;
 
-      if (pos.y < pd.lastCheckpointPos.y - this.config.deathBelowCheckpoint) {
+      if (pos.y < this.config.deathYFloor) {
         this.resetPlayerToCheckpoint(player, gp, pd);
       }
     }

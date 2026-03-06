@@ -11,6 +11,7 @@ import type { World } from 'hytopia';
 import type { GameModeType } from './GameConfig';
 import { LOBBY_CONFIG } from './GameConfig';
 import type { BaseGameMode } from './BaseGameMode';
+import { UIManager } from './UIManager';
 
 // ============================================
 // Types
@@ -398,14 +399,21 @@ export class MatchManager {
   }
 
   /**
-   * Teleports a player back to the lobby spawn position.
+   * Returns a player to the lobby after a match ends.
+   * Re-spawns their lobby entity and re-locks pointer for WASD movement.
    */
   private returnPlayerToLobby(player: Player): void {
     if (!this.world) return;
 
-    const entities = this.world.entityManager.getPlayerEntitiesByPlayer(player);
-    if (entities.length > 0) {
-      entities[0].setPosition(LOBBY_CONFIG.spawnPosition);
-    }
+    // Re-spawn the lobby entity via GameManager (the game mode's onEnd should
+    // have already despawned any game-mode-specific entities it created).
+    // Use dynamic import to avoid circular dependency at module load time.
+    import('./GameManager').then(({ GameManager }) => {
+      GameManager.instance.respawnLobbyEntity(player);
+    });
+
+    // Re-lock pointer and hide overlays so the player can move with WASD in the lobby.
+    player.ui.lockPointer(true);
+    UIManager.instance.hideAll(player);
   }
 }

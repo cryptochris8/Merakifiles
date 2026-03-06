@@ -15,6 +15,7 @@
 import {
   Entity,
   PlayerEntity,
+  DefaultPlayerEntity,
   EntityEvent,
   PlayerEvent,
   RigidBodyType,
@@ -371,11 +372,9 @@ export class TowerDuelGame extends BaseGameMode {
 
     const spawnPos = this.getSpawnPosition(data.team, data.role);
 
-    const playerEntity = new PlayerEntity({
+    const playerEntity = new DefaultPlayerEntity({
       player: data.player,
       name: `${data.player.username} [${data.role.toUpperCase()}]`,
-      modelUri: 'models/players/player.gltf',
-      modelScale: 0.5,
     });
 
     playerEntity.spawn(this.world, spawnPos);

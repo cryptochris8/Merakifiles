@@ -462,18 +462,18 @@ export class GameManager {
       this.handleUIEvent(player, payload.data);
     });
 
+    // Send initial coin balance (sendData may be buffered until client HTML loads).
+    const playerData = this.playerDataManager.getPlayerData(player);
+    if (playerData) {
+      this.uiManager.showCoinUpdate(player, playerData.coins, 0);
+    }
+
     // Welcome message.
     this.world.chatManager.sendPlayerMessage(
       player,
       `Welcome to Athlete Domains, ${player.username}! Type /games to open the game selector.`,
       'FFFF00',
     );
-
-    // Show their coin balance.
-    const data = this.playerDataManager.getPlayerData(player);
-    if (data) {
-      this.uiManager.showCoinUpdate(player, data.coins, 0);
-    }
   }
 
   /**
@@ -564,6 +564,13 @@ export class GameManager {
         // Forwarded to the active game mode via match.
         break;
 
+      case 'requestPointerLock':
+        // Client-side recovery: re-lock pointer if no menu should be open.
+        if (!this.matchManager.isPlayerInMatch(player)) {
+          player.ui.lockPointer(true);
+        }
+        break;
+
       default:
         break;
     }
@@ -573,43 +580,91 @@ export class GameManager {
    * Handles a player requesting to join a game mode queue.
    */
   private handleJoinQueue(player: Player, gameModeType: GameModeType): void {
-    // Check if the player is in a party - if so, the leader queues the whole party.
-    const party = this.partyManager.getPlayerParty(player);
+    try {
+      // Check if the player is in a party - if so, the leader queues the whole party.
+      const party = this.partyManager.getPlayerParty(player);
 
-    if (party) {
-      if (party.leaderId !== player.id) {
-        this.uiManager.showNotification(player, 'Only the party leader can queue.', '#FF5555');
-        return;
-      }
-      const success = this.partyManager.queueParty(player, gameModeType);
-      if (success) {
-        for (const member of party.members) {
-          this.uiManager.hideGameSelector(member);
-          this.uiManager.showQueueStatus(
-            member,
-            gameModeType,
-            1,
-            this.matchManager.getQueueCount(gameModeType),
-            30,
-          );
+      if (party) {
+        if (party.leaderId !== player.id) {
+          this.uiManager.hideGameSelector(player);
+          this.uiManager.showNotification(player, 'Only the party leader can queue.', '#FF5555');
+          return;
+        }
+        const success = this.partyManager.queueParty(player, gameModeType);
+        if (success) {
+          for (const member of party.members) {
+            this.uiManager.hideGameSelector(member);
+            // If the match started immediately, despawn lobby entity and skip queue UI.
+            if (this.matchManager.isPlayerInMatch(member)) {
+              this.despawnLobbyEntity(member);
+            } else {
+              this.uiManager.showQueueStatus(
+                member,
+                gameModeType,
+                1,
+                this.matchManager.getQueueCount(gameModeType),
+                30,
+              );
+            }
+          }
+        } else {
+          this.uiManager.hideGameSelector(player);
+          this.uiManager.showNotification(player, 'Failed to join queue.', '#FF5555');
         }
       } else {
-        this.uiManager.showNotification(player, 'Failed to join queue.', '#FF5555');
+        const success = this.matchManager.joinQueue(gameModeType, [player]);
+        if (success) {
+          this.uiManager.hideGameSelector(player);
+          // If the match started immediately (minPlayers reached), despawn lobby entity
+          // and skip queue UI — the game mode has already spawned its own entity.
+          if (this.matchManager.isPlayerInMatch(player)) {
+            this.despawnLobbyEntity(player);
+          } else {
+            this.uiManager.showQueueStatus(
+              player,
+              gameModeType,
+              1,
+              this.matchManager.getQueueCount(gameModeType),
+              30,
+            );
+          }
+        } else {
+          this.uiManager.hideGameSelector(player);
+          this.uiManager.showNotification(player, 'Failed to join queue.', '#FF5555');
+        }
       }
-    } else {
-      const success = this.matchManager.joinQueue(gameModeType, [player]);
-      if (success) {
-        this.uiManager.hideGameSelector(player);
-        this.uiManager.showQueueStatus(
-          player,
-          gameModeType,
-          1,
-          this.matchManager.getQueueCount(gameModeType),
-          30,
-        );
-      } else {
-        this.uiManager.showNotification(player, 'Failed to join queue.', '#FF5555');
-      }
+    } catch (err) {
+      // If anything throws (game mode init, entity spawn, etc.), always re-lock pointer
+      // so the player isn't stuck frozen with an unlocked cursor.
+      console.error('[GameManager] Error in handleJoinQueue:', err);
+      this.uiManager.hideGameSelector(player);
+      this.uiManager.showNotification(player, 'Error joining game. Try again.', '#FF5555');
+    }
+  }
+
+  /**
+   * Despawns a player's lobby entity (when entering a match that spawns its own entity).
+   */
+  private despawnLobbyEntity(player: Player): void {
+    const entity = this.playerEntities.get(player.id);
+    if (entity && entity.isSpawned) {
+      entity.despawn();
+      console.info(`[GameManager] Despawned lobby entity for ${player.username} (entering match).`);
+    }
+  }
+
+  /**
+   * Re-spawns a player's lobby entity (when returning from a match to the lobby).
+   */
+  respawnLobbyEntity(player: Player): void {
+    if (!this.world) return;
+
+    const existing = this.playerEntities.get(player.id);
+    if (existing && !existing.isSpawned) {
+      existing.spawn(this.world, LOBBY_CONFIG.spawnPosition);
+      player.camera.setAttachedToEntity(existing);
+      player.camera.setMode(PlayerCameraMode.THIRD_PERSON);
+      console.info(`[GameManager] Re-spawned lobby entity for ${player.username} (returning to lobby).`);
     }
   }
 
@@ -620,7 +675,10 @@ export class GameManager {
     const removed = this.matchManager.leaveQueue(player);
     if (removed) {
       this.uiManager.hideQueueStatus(player);
-      this.uiManager.showGameSelector(player);
+      // Return to normal gameplay instead of re-opening the game selector.
+      // Re-opening the selector would call lockPointer(false) again, potentially
+      // trapping the player if the UI doesn't render correctly.
+      this.uiManager.hideAll(player);
       this.uiManager.showNotification(player, 'Left the queue.', '#FFFF00');
     }
   }
@@ -770,6 +828,7 @@ export class GameManager {
     });
 
     chatManager.registerCommand('/games', (player: Player, _args: string[], _message: string) => {
+      console.info(`[GameManager] /games command from ${player.username}`);
       this.uiManager.showGameSelector(player);
     });
 

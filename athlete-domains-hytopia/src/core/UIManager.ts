@@ -110,6 +110,8 @@ export class UIManager {
       });
     }
 
+    console.info(`[UIManager] showGameSelector for ${player.username}: ${gameModes.length} game modes`);
+
     player.ui.sendData({
       type: 'showGameSelector',
       gameModes,

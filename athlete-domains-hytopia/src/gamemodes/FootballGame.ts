@@ -13,6 +13,7 @@
 import {
   Entity,
   PlayerEntity,
+  DefaultPlayerEntity,
   EntityEvent,
   PlayerEvent,
   RigidBodyType,
@@ -208,11 +209,9 @@ export class FootballGame extends BaseGameMode {
     // Determine spawn index based on team and player count
     const spawnIndex = this.getSpawnIndex(team, teamData.players.size - 1);
 
-    const playerEntity = new PlayerEntity({
+    const playerEntity = new DefaultPlayerEntity({
       player,
       name: player.username,
-      modelUri: 'models/players/player.gltf',
-      modelScale: 0.5,
     });
 
     const spawnPos = this.getSpawnPosition(spawnIndex);

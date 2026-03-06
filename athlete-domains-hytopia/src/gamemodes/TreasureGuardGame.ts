@@ -16,6 +16,7 @@
 import {
   Entity,
   PlayerEntity,
+  DefaultPlayerEntity,
   Player,
   RigidBodyType,
   ColliderShape,
@@ -162,11 +163,9 @@ export default class TreasureGuardGame extends BaseGameMode {
       TREASURE_GUARD_CONFIG.playerSpawnPoints[spawnIndex] ??
       TREASURE_GUARD_CONFIG.playerSpawnPoints[0];
 
-    const playerEntity = new PlayerEntity({
+    const playerEntity = new DefaultPlayerEntity({
       player,
       name: player.username,
-      modelUri: 'models/players/player.gltf',
-      modelScale: 0.5,
     });
     playerEntity.spawn(this.world, spawnPos);
     this.playerEntities.set(player.id, playerEntity);

@@ -5,7 +5,10 @@
   "main": "index.ts",
   "scripts": {
     "dev": "npx hytopia dev",
-    "build": "npx hytopia build"
+    "build": "npx hytopia build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "hytopia",
@@ -26,6 +29,7 @@
     "prismarine-schematic": "^1.2.3"
   },
   "devDependencies": {
-    "nbt": "^0.8.1"
+    "nbt": "^0.8.1",
+    "vitest": "^4.0.18"
   }
 }

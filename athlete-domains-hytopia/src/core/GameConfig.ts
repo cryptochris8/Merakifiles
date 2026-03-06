@@ -212,28 +212,34 @@ export const PARKOUR_RACE_CONFIG = {
   matchDuration: 600, // seconds (10 minutes)
   minPlayers: 1,
   maxPlayers: 8,
-  deathBelowCheckpoint: 17,
-  checkpointMilestones: [1, 5, 7],
+  deathYFloor: -5, // absolute Y below which the player is respawned
+  checkpointMilestones: [1, 3, 5],
+  // Checkpoints traced from extracted map + PARKOUR_OFFSET (0,0,600).
+  // Course starts at Y=87 (x:14,z:627) and descends towards negative-X / higher-Z.
+  // TODO: Verify checkpoint positions in-game and adjust as needed.
   checkpoints: [
-    { x: 6.5,    y: 70.0, z: 599.5 },
-    { x: -9.5,   y: 76.0, z: 576.5 },
-    { x: -52.5,  y: 64.0, z: 588.5 },
-    { x: -108.5, y: 52.0, z: 606.5 },
-    { x: -166.5, y: 41.0, z: 644.5 },
-    { x: -187.5, y: 31.0, z: 730.5 },
-    { x: -219.7, y: 22.0, z: 779.0 },
-    { x: -213.5, y: 15.0, z: 831.5 },
-    { x: -149.5, y: 26.0, z: 861.5 },
+    // Checkpoint positions need in-game verification. Use /spectator + /pos to find exact spots.
+    // Sensor radius = 3 blocks, so approximate positions work.
+    { x: 14.5,   y: 88.0,  z: 660.5 },   // CP1: far end of east platform (extracted z=60)
+    { x: -33.5,  y: 88.0,  z: 670.5 },   // CP2: center of west platform (extracted x=-33,z=70)
+    { x: -44.5,  y: 52.0,  z: 672.5 },   // CP3: Y=52 descent
+    { x: -92.5,  y: 40.0,  z: 708.5 },   // CP4: Y=40 area
+    { x: -130.5, y: 34.0,  z: 658.5 },   // CP5: Y=34 area
+    { x: -187.5, y: 31.0,  z: 730.5 },   // CP6: far west
+    { x: -203.5, y: 22.0,  z: 797.5 },   // CP7: Y=22 leading edge
+    { x: -203.5, y: 16.0,  z: 797.5 },   // CP8: Y=16 area
+    { x: -48.5,  y: 22.0,  z: 864.5 },   // CP9: finish area
   ],
   spawnPoints: [
-    { x: -0.5, y: 70.0, z: 599.5 },
-    { x: -0.5, y: 70.0, z: 598.5 },
-    { x: -0.5, y: 70.0, z: 600.5 },
-    { x: 1.5,  y: 70.0, z: 600.5 },
-    { x: 1.5,  y: 70.0, z: 599.5 },
-    { x: 1.5,  y: 70.0, z: 598.5 },
-    { x: 3.5,  y: 70.0, z: 599.5 },
-    { x: 4.5,  y: 70.0, z: 599.5 },
+    // Starting platform: extracted (x:11-18, y:87, z:26-28) + offset (0,0,600)
+    { x: 14.5, y: 88.5, z: 627.5 },
+    { x: 16.5, y: 88.5, z: 627.5 },
+    { x: 14.5, y: 88.5, z: 628.5 },
+    { x: 15.5, y: 88.5, z: 628.5 },
+    { x: 16.5, y: 88.5, z: 628.5 },
+    { x: 13.5, y: 88.5, z: 627.5 },
+    { x: 17.5, y: 88.5, z: 627.5 },
+    { x: 18.5, y: 88.5, z: 627.5 },
   ],
 };
 

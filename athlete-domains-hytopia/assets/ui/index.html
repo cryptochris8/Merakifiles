@@ -151,6 +151,9 @@
     .game-card .players { font-size: 11px; color: #aaa; }
     .game-card .desc { font-size: 10px; color: #888; margin-top: 4px; }
 
+    /* ===== GAME SELECTOR ===== */
+    #game-selector { width: 620px; }
+
     /* ===== SUB MENUS ===== */
     #football-menu { width: 480px; z-index: 101; }
     #duels-menu { width: 400px; z-index: 101; }
@@ -266,7 +269,7 @@
   <span class="spinner"></span>
   <span id="queue-text">Searching for match...</span>
   <br>
-  <button id="queue-leave-btn" onclick="leaveQueue()">Leave Queue</button>
+  <button id="queue-leave-btn" data-action="leaveQueue">Leave Queue</button>
 </div>
 
 <div id="checkpoint-bar">
@@ -278,21 +281,21 @@
 
 <!-- ===== GAME SELECTOR ===== -->
 <div id="game-selector" class="overlay">
-  <button class="close-btn" onclick="closeGameSelector()">&times;</button>
+  <button class="close-btn" data-action="closeGameSelector">&times;</button>
   <h2>Game Selector</h2>
   <div class="game-grid" id="game-grid"></div>
 </div>
 
 <!-- ===== FOOTBALL SUB-MENU ===== -->
 <div id="football-menu" class="overlay">
-  <button class="close-btn" onclick="backToGameSelector()">&times;</button>
+  <button class="close-btn" data-action="backToGameSelector">&times;</button>
   <h3>Football - Select Mode</h3>
   <div class="game-grid" id="football-grid"></div>
 </div>
 
 <!-- ===== DUELS SUB-MENU ===== -->
 <div id="duels-menu" class="overlay">
-  <button class="close-btn" onclick="backToGameSelector()">&times;</button>
+  <button class="close-btn" data-action="backToGameSelector">&times;</button>
   <h3>Duels - Select Mode</h3>
   <div class="game-grid" id="duels-grid" style="grid-template-columns:repeat(2,1fr);"></div>
 </div>
@@ -308,19 +311,19 @@
   <h2 id="results-title">Game Over!</h2>
   <div id="results-rows"></div>
   <div class="reward-summary" id="results-reward"></div>
-  <button class="back-btn" onclick="backToLobby()">Back to Lobby</button>
+  <button class="back-btn" data-action="backToLobby">Back to Lobby</button>
 </div>
 
 <!-- ===== STATS PANEL ===== -->
 <div id="stats-panel" class="overlay">
-  <button class="close-btn" onclick="closePanel('stats-panel')">&times;</button>
+  <button class="close-btn" data-action="closePanel" data-panel="stats-panel">&times;</button>
   <h2 id="stats-player-name">Your Stats</h2>
   <div id="stats-content"></div>
 </div>
 
 <!-- ===== SHOP MENU ===== -->
 <div id="shop-menu" class="overlay">
-  <button class="close-btn" onclick="closeShop()">&times;</button>
+  <button class="close-btn" data-action="closeShop">&times;</button>
   <h3 id="shop-title">Shop</h3>
   <div class="shop-coins">Your coins: <span id="shop-coins">0</span></div>
   <div id="shop-tabs" class="shop-tabs"></div>
@@ -332,9 +335,7 @@
 <script>
 // ===== SERVER COMMUNICATION =====
 function sendToServer(data) {
-  if (window.hytopia && window.hytopia.sendData) {
-    window.hytopia.sendData(data);
-  }
+  hytopia.sendData(data);
 }
 
 // ===== STATE =====
@@ -392,14 +393,14 @@ function buildGameSelector(gameModes) {
   });
 
   // Duels card
-  grid.innerHTML += '<div class="game-card" onclick="openDuels()">' +
+  grid.innerHTML += '<div class="game-card" data-action="openDuels">' +
     '<div class="icon">&#9876;</div><div class="name">Duels</div>' +
     '<div class="desc">Sumo & Tower Duel</div>' +
     '<div class="players">' + duelCount + ' in queue</div></div>';
 
   // Direct modes
   directModes.forEach(function(gm) {
-    grid.innerHTML += '<div class="game-card" onclick="selectGameMode(\'' + gm.type + '\')">' +
+    grid.innerHTML += '<div class="game-card" data-action="selectGameMode" data-type="' + gm.type + '">' +
       '<div class="icon">' + (GAME_ICONS[gm.type] || '&#127918;') + '</div>' +
       '<div class="name">' + gm.name + '</div>' +
       '<div class="desc">' + gm.description + '</div>' +
@@ -407,7 +408,7 @@ function buildGameSelector(gameModes) {
   });
 
   // Football card
-  grid.innerHTML += '<div class="game-card" onclick="openFootball()">' +
+  grid.innerHTML += '<div class="game-card" data-action="openFootball">' +
     '<div class="icon">&#9917;</div><div class="name">Football</div>' +
     '<div class="desc">1v1, 2v2, or 3v3</div>' +
     '<div class="players">' + footballCount + ' in queue</div></div>';
@@ -423,7 +424,7 @@ function openDuels() {
   grid.innerHTML = '';
   currentGameModes.forEach(function(gm) {
     if (DUEL_MODES.indexOf(gm.type) < 0) return;
-    grid.innerHTML += '<div class="game-card" onclick="joinQueue(\'' + gm.type + '\')">' +
+    grid.innerHTML += '<div class="game-card" data-action="joinQueue" data-type="' + gm.type + '">' +
       '<div class="icon">' + (GAME_ICONS[gm.type] || '&#9876;') + '</div>' +
       '<div class="name">' + gm.name + '</div>' +
       '<div class="desc">' + gm.description + '</div>' +
@@ -438,7 +439,7 @@ function openFootball() {
   grid.innerHTML = '';
   currentGameModes.forEach(function(gm) {
     if (FOOTBALL_MODES.indexOf(gm.type) < 0) return;
-    grid.innerHTML += '<div class="game-card" onclick="joinQueue(\'' + gm.type + '\')">' +
+    grid.innerHTML += '<div class="game-card" data-action="joinQueue" data-type="' + gm.type + '">' +
       '<div class="icon">' + (GAME_ICONS[gm.type] || '&#9917;') + '</div>' +
       '<div class="name">' + gm.name + '</div>' +
       '<div class="desc">' + gm.description + '</div>' +
@@ -455,19 +456,24 @@ function backToGameSelector() {
 
 function closeGameSelector() {
   document.getElementById('game-selector').style.display = 'none';
+  document.getElementById('football-menu').style.display = 'none';
+  document.getElementById('duels-menu').style.display = 'none';
   sendToServer({ type: 'closeGameSelector' });
 }
 
 // ===== QUEUE =====
 function joinQueue(gameModeType) {
   hideAllOverlays();
-  document.getElementById('queue-status').style.display = 'block';
-  document.getElementById('queue-text').textContent = 'Searching for match...';
+  // Don't show queue-status immediately — let the server decide.
+  // If minPlayers=1, the match starts instantly and queue-status would be wrong.
   sendToServer({ type: 'joinQueue', gameModeType: gameModeType });
 }
 
 function leaveQueue() {
+  document.getElementById('queue-status').style.display = 'none';
   sendToServer({ type: 'leaveQueue' });
+  // Ask server to re-lock pointer as a recovery mechanism
+  sendToServer({ type: 'requestPointerLock' });
 }
 
 // ===== TEAM SELECTION =====
@@ -476,8 +482,7 @@ function buildTeamSelector(gameModeName, teams) {
   var el = document.getElementById('team-options');
   el.innerHTML = '';
   teams.forEach(function(t) {
-    el.innerHTML += '<div class="team-btn" style="background:' + t.color + '33; border:2px solid ' + t.color + ';" ' +
-      'onclick="selectTeam(\'' + t.id + '\')">' +
+    el.innerHTML += '<div class="team-btn" data-action="selectTeam" data-team="' + t.id + '" style="background:' + t.color + '33; border:2px solid ' + t.color + ';">' +
       '<div>' + t.name.toUpperCase() + '</div>' +
       '<div style="font-size:12px; margin-top:4px;">' + t.playerCount + '/' + t.maxPlayers + '</div></div>';
   });
@@ -625,12 +630,12 @@ function openShop(data) {
     var priceClass = item.price === 0 ? 'item-price free' : 'item-price';
     if (item.isMysteryBoxFree) { priceText = 'FREE TODAY'; priceClass = 'item-price free'; }
 
-    itemsEl.innerHTML += '<div class="shop-item" onclick="buyBooster(\'' + item.boosterId + '\')">' +
+    itemsEl.innerHTML += '<div class="shop-item" data-action="buyBooster" data-id="' + item.boosterId + '">' +
       '<div class="item-info"><div class="item-name">' + item.name + '</div>' +
       '<div class="item-desc">' + (item.description || '') + '</div>' +
       (item.ownedQuantity > 0 ? '<div class="item-qty">Owned: ' + item.ownedQuantity + '</div>' : '') +
       '</div><div class="item-actions">' +
-      (item.ownedQuantity > 0 ? '<button class="shop-btn use" onclick="event.stopPropagation(); useBooster(\'' + item.boosterId + '\')">Use</button>' : '') +
+      (item.ownedQuantity > 0 ? '<button class="shop-btn use" data-action="useBooster" data-id="' + item.boosterId + '">Use</button>' : '') +
       '<span class="' + priceClass + '">' + priceText + '</span>' +
       '</div></div>';
   });
@@ -641,10 +646,10 @@ function openShop(data) {
   if (data.inventory && data.inventory.length > 0) {
     invEl.innerHTML = '<h4 style="color:#FFFF55; margin:12px 0 8px;">Your Boosters</h4>';
     data.inventory.forEach(function(b) {
-      invEl.innerHTML += '<div class="shop-item" onclick="useBooster(\'' + b.boosterId + '\')">' +
+      invEl.innerHTML += '<div class="shop-item" data-action="useBooster" data-id="' + b.boosterId + '">' +
         '<div class="item-info"><div class="item-name">' + b.name + '</div></div>' +
         '<div class="item-actions"><span style="color:#aaa;">x' + b.quantity + '</span>' +
-        '<button class="shop-btn use">Use</button></div></div>';
+        '<button class="shop-btn use" data-action="useBooster" data-id="' + b.boosterId + '">Use</button></div></div>';
     });
   }
 
@@ -729,7 +734,7 @@ function handleSumoUI(payload) {
 // ===== ESCAPE KEY HANDLER =====
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    // Close any open overlay and tell the server to re-lock pointer
+    // Close any open overlay or HUD element and tell the server to re-lock pointer
     var anyOpen = false;
     allOverlays.forEach(function(id) {
       var el = document.getElementById(id);
@@ -738,247 +743,292 @@ document.addEventListener('keydown', function(e) {
         anyOpen = true;
       }
     });
+    // Also close queue-status if visible (player may be stuck in queue view)
+    var queueStatus = document.getElementById('queue-status');
+    if (queueStatus && queueStatus.style.display !== 'none') {
+      queueStatus.style.display = 'none';
+      sendToServer({ type: 'leaveQueue' });
+      anyOpen = true;
+    }
     if (anyOpen) {
       sendToServer({ type: 'closeGameSelector' });
     }
+    // Always request pointer re-lock on Escape as a recovery mechanism
+    sendToServer({ type: 'requestPointerLock' });
   }
 });
 
 // ===== MAIN EVENT ROUTER =====
-if (window.hytopia) {
-  window.hytopia.onData = function(data) {
-    if (!data || !data.type) return;
+// The hytopia global is injected by the Hytopia client runtime into the iframe.
+// It may not be available immediately when the script first runs, so we poll
+// until it appears and then register the onData handler.
+function onServerData(data) {
+  if (!data || !data.type) return;
 
-    switch (data.type) {
+  switch (data.type) {
 
-      // ===== CORE UI EVENTS =====
-      case 'showGameSelector':
-        hideAllOverlays();
-        buildGameSelector(data.gameModes || []);
-        document.getElementById('game-selector').style.display = 'block';
-        break;
+    // ===== CORE UI EVENTS =====
+    case 'showGameSelector':
+      console.log('[UI] showGameSelector received, gameModes:', (data.gameModes || []).length);
+      hideAllOverlays();
+      buildGameSelector(data.gameModes || []);
+      document.getElementById('game-selector').style.display = 'block';
+      break;
 
-      case 'hideGameSelector':
-        document.getElementById('game-selector').style.display = 'none';
-        document.getElementById('football-menu').style.display = 'none';
-        document.getElementById('duels-menu').style.display = 'none';
-        break;
+    case 'hideGameSelector':
+      document.getElementById('game-selector').style.display = 'none';
+      document.getElementById('football-menu').style.display = 'none';
+      document.getElementById('duels-menu').style.display = 'none';
+      break;
 
-      case 'showScoreboard':
-        updateScoreboard(data.gameModeName, data.entries || []);
-        break;
+    case 'showScoreboard':
+      updateScoreboard(data.gameModeName, data.entries || []);
+      break;
 
-      case 'updateTimer':
-        updateTimer(data.timeFormatted, data.timeRemaining, data.phase);
-        break;
+    case 'updateTimer':
+      updateTimer(data.timeFormatted, data.timeRemaining, data.phase);
+      break;
 
-      case 'showResults':
-        showResults(data.gameModeName, data.results || []);
-        break;
+    case 'showResults':
+      showResults(data.gameModeName, data.results || []);
+      break;
 
-      case 'showStats':
-        showStats(data.playerName, data.stats || {});
-        break;
+    case 'showStats':
+      showStats(data.playerName, data.stats || {});
+      break;
 
-      case 'showQueueStatus':
-        hideAllOverlays();
-        document.getElementById('queue-status').style.display = 'block';
-        document.getElementById('queue-text').textContent =
-          'Searching for ' + (data.gameModeName || 'match') + '... (' + data.totalInQueue + ' in queue)';
-        break;
+    case 'showQueueStatus':
+      hideAllOverlays();
+      document.getElementById('queue-status').style.display = 'block';
+      document.getElementById('queue-text').textContent =
+        'Searching for ' + (data.gameModeName || 'match') + '... (' + data.totalInQueue + ' in queue)';
+      break;
 
-      case 'hideQueueStatus':
-        document.getElementById('queue-status').style.display = 'none';
-        break;
+    case 'hideQueueStatus':
+      document.getElementById('queue-status').style.display = 'none';
+      break;
 
-      case 'showTeamSelection':
-        buildTeamSelector(data.gameModeName, data.teams || []);
-        break;
+    case 'showTeamSelection':
+      buildTeamSelector(data.gameModeName, data.teams || []);
+      break;
 
-      case 'hideTeamSelection':
-        document.getElementById('team-selector').style.display = 'none';
-        break;
+    case 'hideTeamSelection':
+      document.getElementById('team-selector').style.display = 'none';
+      break;
 
-      case 'showNotification':
-        showNotification(data.message, data.color, data.durationMs);
-        break;
+    case 'showNotification':
+      showNotification(data.message, data.color, data.durationMs);
+      break;
 
-      case 'coinUpdate':
-        updateCoins(data.balance, data.change);
-        break;
+    case 'coinUpdate':
+      updateCoins(data.balance, data.change);
+      break;
 
-      case 'hideAll':
-        hideAll();
-        break;
+    case 'hideAll':
+      hideAll();
+      break;
 
-      // ===== SHOP EVENTS =====
-      case 'shop:cafe_menu':
-      case 'shop:ice_cream_menu':
-        openShop(data);
-        break;
+    // ===== SHOP EVENTS =====
+    case 'shop:cafe_menu':
+    case 'shop:ice_cream_menu':
+      openShop(data);
+      break;
 
-      case 'shop:error':
-      case 'booster:error':
-      case 'cosmetic:error':
-        showNotification(data.message, '#FF5555', 4000);
-        break;
+    case 'shop:error':
+    case 'booster:error':
+    case 'cosmetic:error':
+      showNotification(data.message, '#FF5555', 4000);
+      break;
 
-      case 'shop:purchased':
-        showNotification('Purchased ' + data.boosterName + ' for ' + data.price + ' coins!', '#55FF55', 3000);
-        break;
+    case 'shop:purchased':
+      showNotification('Purchased ' + data.boosterName + ' for ' + data.price + ' coins!', '#55FF55', 3000);
+      break;
 
-      case 'shop:mystery_box_opened':
-        showNotification('Mystery Box: You got ' + data.receivedBoosterName + '!' + (data.wasFree ? ' (Free daily!)' : ''), '#FFD700', 5000);
-        break;
+    case 'shop:mystery_box_opened':
+      showNotification('Mystery Box: You got ' + data.receivedBoosterName + '!' + (data.wasFree ? ' (Free daily!)' : ''), '#FFD700', 5000);
+      break;
 
-      case 'booster:consumed':
-        showNotification('Activated ' + data.boosterName + '! (' + data.remainingQuantity + ' remaining)', '#5555FF', 3000);
-        break;
+    case 'booster:consumed':
+      showNotification('Activated ' + data.boosterName + '! (' + data.remainingQuantity + ' remaining)', '#5555FF', 3000);
+      break;
 
-      case 'booster:activated':
-        showNotification(data.boosterName + ' active!', '#55FFFF', 3000);
-        break;
+    case 'booster:activated':
+      showNotification(data.boosterName + ' active!', '#55FFFF', 3000);
+      break;
 
-      case 'cosmetic:purchased':
-        showNotification('Unlocked ' + data.cosmeticName + '!', '#FF55FF', 3000);
-        break;
+    case 'cosmetic:purchased':
+      showNotification('Unlocked ' + data.cosmeticName + '!', '#FF55FF', 3000);
+      break;
 
-      case 'cosmetic:equipped':
-        showNotification('Equipped ' + data.cosmeticName + '!', '#FF55FF', 3000);
-        break;
+    case 'cosmetic:equipped':
+      showNotification('Equipped ' + data.cosmeticName + '!', '#FF55FF', 3000);
+      break;
 
-      // ===== FOOTBALL EVENTS =====
-      case 'FOOTBALL_UI_UPDATE':
-        handleFootballUI(data.payload);
-        break;
+    // ===== FOOTBALL EVENTS =====
+    case 'FOOTBALL_UI_UPDATE':
+      handleFootballUI(data.payload);
+      break;
 
-      case 'FOOTBALL_GOAL':
-        showNotification('GOAL! ' + (data.payload.scoringTeam === 'red' ? 'Red' : 'Blue') + ' scores!',
-          data.payload.scoringTeam === 'red' ? '#FF5555' : '#5555FF', 3000);
-        if (data.payload.newScore) showScore(data.payload.newScore.red || 0, data.payload.newScore.blue || 0);
-        break;
+    case 'FOOTBALL_GOAL':
+      showNotification('GOAL! ' + (data.payload.scoringTeam === 'red' ? 'Red' : 'Blue') + ' scores!',
+        data.payload.scoringTeam === 'red' ? '#FF5555' : '#5555FF', 3000);
+      if (data.payload.newScore) showScore(data.payload.newScore.red || 0, data.payload.newScore.blue || 0);
+      break;
 
-      case 'FOOTBALL_COUNTDOWN':
-        showCountdown(data.payload.seconds);
-        break;
+    case 'FOOTBALL_COUNTDOWN':
+      showCountdown(data.payload.seconds);
+      break;
 
-      case 'FOOTBALL_TEAM_ASSIGNMENT':
-        showNotification('You are on ' + data.payload.team.toUpperCase() + ' team!',
-          data.payload.teamColor || '#FFFFFF', 5000);
-        break;
+    case 'FOOTBALL_TEAM_ASSIGNMENT':
+      showNotification('You are on ' + data.payload.team.toUpperCase() + ' team!',
+        data.payload.teamColor || '#FFFFFF', 5000);
+      break;
 
-      case 'FOOTBALL_MATCH_END':
-        showNotification(data.payload.winner.toUpperCase() + ' team wins!',
-          data.payload.winner === 'red' ? '#FF5555' : '#5555FF', 5000);
-        break;
+    case 'FOOTBALL_MATCH_END':
+      showNotification(data.payload.winner.toUpperCase() + ' team wins!',
+        data.payload.winner === 'red' ? '#FF5555' : '#5555FF', 5000);
+      break;
 
-      case 'FOOTBALL_KICK':
-      case 'FOOTBALL_RESUME':
-      case 'FOOTBALL_PLAYER_JOINED':
-      case 'FOOTBALL_PLAYER_LEFT':
-        break; // handled silently
+    case 'FOOTBALL_KICK':
+    case 'FOOTBALL_RESUME':
+    case 'FOOTBALL_PLAYER_JOINED':
+    case 'FOOTBALL_PLAYER_LEFT':
+      break; // handled silently
 
-      // ===== SUMO EVENTS =====
-      case 'SUMO_UI_UPDATE':
-        handleSumoUI(data.payload);
-        break;
+    // ===== SUMO EVENTS =====
+    case 'SUMO_UI_UPDATE':
+      handleSumoUI(data.payload);
+      break;
 
-      case 'SUMO_COUNTDOWN':
-        showCountdown(data.payload.seconds);
-        break;
+    case 'SUMO_COUNTDOWN':
+      showCountdown(data.payload.seconds);
+      break;
 
-      case 'SUMO_MATCH_OVER':
-        showNotification(data.payload.winnerName + ' wins!', '#FFD700', 5000);
-        break;
+    case 'SUMO_MATCH_OVER':
+      showNotification(data.payload.winnerName + ' wins!', '#FFD700', 5000);
+      break;
 
-      case 'SUMO_PUNCH_HIT':
-        break; // visual feedback handled by game engine
+    case 'SUMO_PUNCH_HIT':
+      break; // visual feedback handled by game engine
 
-      case 'SUMO_PUNCH_RECEIVED':
-        break; // could add screen shake effect later
+    case 'SUMO_PUNCH_RECEIVED':
+      break; // could add screen shake effect later
 
-      // ===== TOWER DUEL EVENTS =====
-      case 'TOWER_DUEL_UI_UPDATE':
-        handleTowerDuelUI(data.payload);
-        break;
+    // ===== TOWER DUEL EVENTS =====
+    case 'TOWER_DUEL_UI_UPDATE':
+      handleTowerDuelUI(data.payload);
+      break;
 
-      case 'TOWER_DUEL_ROUND_START':
-        showNotification('Round ' + data.payload.round + ' - Fight!', '#55FF55', 3000);
-        break;
+    case 'TOWER_DUEL_ROUND_START':
+      showNotification('Round ' + data.payload.round + ' - Fight!', '#55FF55', 3000);
+      break;
 
-      case 'TOWER_DUEL_ROUND_END':
-        showNotification('Round ' + data.payload.round + ' won by ' + data.payload.winnerName + '!', '#FFD700', 3000);
-        break;
+    case 'TOWER_DUEL_ROUND_END':
+      showNotification('Round ' + data.payload.round + ' won by ' + data.payload.winnerName + '!', '#FFD700', 3000);
+      break;
 
-      case 'TOWER_DUEL_ROUND_DRAW':
-        showNotification('Round ' + data.payload.round + ' - Draw!', '#FFFF55', 3000);
-        break;
+    case 'TOWER_DUEL_ROUND_DRAW':
+      showNotification('Round ' + data.payload.round + ' - Draw!', '#FFFF55', 3000);
+      break;
 
-      case 'TOWER_DUEL_KILL':
-        showNotification(data.payload.killerName + ' eliminated ' + data.payload.deadName + '!', '#FF5555', 3000);
-        break;
+    case 'TOWER_DUEL_KILL':
+      showNotification(data.payload.killerName + ' eliminated ' + data.payload.deadName + '!', '#FF5555', 3000);
+      break;
 
-      case 'TOWER_DUEL_HP_UPDATE':
-        break; // handled by UI_UPDATE
+    case 'TOWER_DUEL_HP_UPDATE':
+      break; // handled by UI_UPDATE
 
-      case 'TOWER_DUEL_DAMAGE_TAKEN':
-        break; // could add damage flash
+    case 'TOWER_DUEL_DAMAGE_TAKEN':
+      break; // could add damage flash
 
-      case 'TOWER_DUEL_ROLE_ASSIGNMENT':
-        showNotification('You are ' + data.payload.role.toUpperCase() + ' on ' + data.payload.team.toUpperCase() + ' team!', '#55FFFF', 5000);
-        break;
+    case 'TOWER_DUEL_ROLE_ASSIGNMENT':
+      showNotification('You are ' + data.payload.role.toUpperCase() + ' on ' + data.payload.team.toUpperCase() + ' team!', '#55FFFF', 5000);
+      break;
 
-      case 'TOWER_DUEL_MATCH_END':
-        showNotification(data.payload.winner.toUpperCase() + ' team wins!', '#FFD700', 5000);
-        break;
+    case 'TOWER_DUEL_MATCH_END':
+      showNotification(data.payload.winner.toUpperCase() + ' team wins!', '#FFD700', 5000);
+      break;
 
-      case 'TOWER_DUEL_MELEE_HIT':
-      case 'TOWER_DUEL_ARROW_HIT':
-        break; // visual feedback
+    case 'TOWER_DUEL_MELEE_HIT':
+    case 'TOWER_DUEL_ARROW_HIT':
+      break; // visual feedback
 
-      // ===== PARKOUR EVENTS =====
-      case 'parkourState':
-        updateCheckpoint(data.checkpoint, data.totalCheckpoints);
-        if (data.finished) {
-          showNotification('You finished the parkour course!', '#55FF55', 5000);
-        }
-        if (data.leaderboard && data.leaderboard.length > 0) {
-          updateScoreboard('Parkour Race', data.leaderboard.map(function(e) {
-            return { playerName: e.playerName || e.name, score: e.checkpoint || e.checkpoints || 0 };
-          }));
-        }
-        break;
+    // ===== PARKOUR EVENTS =====
+    case 'parkourState':
+      updateCheckpoint(data.checkpoint, data.totalCheckpoints);
+      if (data.finished) {
+        showNotification('You finished the parkour course!', '#55FF55', 5000);
+      }
+      if (data.leaderboard && data.leaderboard.length > 0) {
+        updateScoreboard('Parkour Race', data.leaderboard.map(function(e) {
+          return { playerName: e.playerName || e.name, score: e.checkpoint || e.checkpoints || 0 };
+        }));
+      }
+      break;
 
-      // ===== JETSKI EVENTS =====
-      case 'jetskiState':
-        updateCheckpoint(data.checkpoint, data.totalCheckpoints);
-        if (data.finished && data.finishPosition) {
-          showNotification('You finished #' + data.finishPosition + '!', '#55FF55', 5000);
-        }
-        if (data.leaderboard && data.leaderboard.length > 0) {
-          updateScoreboard('Jetski Race', data.leaderboard.map(function(e) {
-            return { playerName: e.playerName || e.name, score: e.checkpoint || e.checkpoints || 0 };
-          }));
-        }
-        break;
+    // ===== JETSKI EVENTS =====
+    case 'jetskiState':
+      updateCheckpoint(data.checkpoint, data.totalCheckpoints);
+      if (data.finished && data.finishPosition) {
+        showNotification('You finished #' + data.finishPosition + '!', '#55FF55', 5000);
+      }
+      if (data.leaderboard && data.leaderboard.length > 0) {
+        updateScoreboard('Jetski Race', data.leaderboard.map(function(e) {
+          return { playerName: e.playerName || e.name, score: e.checkpoint || e.checkpoints || 0 };
+        }));
+      }
+      break;
 
-      case 'jetskiLeaderboard':
-        if (data.leaderboard && data.leaderboard.length > 0) {
-          updateScoreboard('Jetski Race', data.leaderboard.map(function(e) {
-            return { playerName: e.playerName || e.name, score: e.checkpoint || e.checkpoints || 0 };
-          }));
-        }
-        break;
+    case 'jetskiLeaderboard':
+      if (data.leaderboard && data.leaderboard.length > 0) {
+        updateScoreboard('Jetski Race', data.leaderboard.map(function(e) {
+          return { playerName: e.playerName || e.name, score: e.checkpoint || e.checkpoints || 0 };
+        }));
+      }
+      break;
 
-      case 'jetskiFinishCountdown':
-        showNotification('Race ends in ' + data.remaining + 's!', '#FFFF55', 1500);
-        break;
+    case 'jetskiFinishCountdown':
+      showNotification('Race ends in ' + data.remaining + 's!', '#FFFF55', 1500);
+      break;
 
-      default:
-        break;
-    }
-  };
+    default:
+      break;
+  }
 }
+
+// Register the onData handler. hytopia.onData() is a method call (not property assignment).
+hytopia.onData(onServerData);
+console.log('[UI] onData handler registered');
+
+// ===== EVENT DELEGATION =====
+// SES sandbox prevents inline onclick handlers from accessing script-scope functions.
+// Use a single delegated click handler that reads data-action attributes instead.
+document.addEventListener('click', function(e) {
+  var target = e.target.closest('[data-action]');
+  if (!target) return;
+  var action = target.getAttribute('data-action');
+
+  switch (action) {
+    case 'leaveQueue': leaveQueue(); break;
+    case 'closeGameSelector': closeGameSelector(); break;
+    case 'backToGameSelector': backToGameSelector(); break;
+    case 'backToLobby': backToLobby(); break;
+    case 'closePanel': closePanel(target.getAttribute('data-panel')); break;
+    case 'closeShop': closeShop(); break;
+    case 'openDuels': openDuels(); break;
+    case 'selectGameMode': selectGameMode(target.getAttribute('data-type')); break;
+    case 'openFootball': openFootball(); break;
+    case 'joinQueue': joinQueue(target.getAttribute('data-type')); break;
+    case 'selectTeam': selectTeam(target.getAttribute('data-team')); break;
+    case 'buyBooster': buyBooster(target.getAttribute('data-id')); break;
+    case 'useBooster':
+      e.stopPropagation();
+      useBooster(target.getAttribute('data-id'));
+      break;
+    case 'buyCosmetic': buyCosmetic(target.getAttribute('data-id')); break;
+    case 'equipCosmetic': equipCosmetic(target.getAttribute('data-id')); break;
+  }
+});
 </script>
 </body>
 </html>

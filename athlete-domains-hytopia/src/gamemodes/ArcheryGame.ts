@@ -16,6 +16,7 @@
 import {
   Entity,
   PlayerEntity,
+  DefaultPlayerEntity,
   Player,
   RigidBodyType,
   ColliderShape,
@@ -181,11 +182,9 @@ export default class ArcheryGame extends BaseGameMode {
     const dockIndex = this.playerEntities.size;
     const dockPos = DOCK_POSITIONS[dockIndex % DOCK_POSITIONS.length];
 
-    const playerEntity = new PlayerEntity({
+    const playerEntity = new DefaultPlayerEntity({
       player,
       name: player.username,
-      modelUri: 'models/players/player.gltf',
-      modelScale: 0.5,
     });
     playerEntity.spawn(this.world, dockPos);
     this.playerEntities.set(player.id, playerEntity);
